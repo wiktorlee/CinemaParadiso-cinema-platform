@@ -46,16 +46,20 @@ public class SecurityConfig {
             // Konfiguracja autoryzacji (kto może co robić)
             .authorizeHttpRequests(auth -> auth
                 // Statyczne pliki (HTML, CSS, JS) - dostęp dla wszystkich
-                .requestMatchers("/", "/index.html", "/login.html", "/register.html", "/profile.html", "/movies.html", "/admin/screenings.html").permitAll()
+                .requestMatchers("/", "/index.html", "/login.html", "/register.html", "/profile.html", "/movies.html", "/repertuar.html", "/reservation.html", "/admin/screenings.html", "/admin/audit-logs.html").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                 // Endpointy autentykacji są publiczne (każdy może się zarejestrować/zalogować)
                 .requestMatchers("/api/auth/**").permitAll()
                 // GET /api/movies - lista filmów dostępna dla wszystkich
                 .requestMatchers("/api/movies", "/api/movies/*").permitAll()
-                // GET /api/screenings - lista seansów dostępna dla wszystkich
-                .requestMatchers("/api/screenings", "/api/screenings/*", "/api/screenings/upcoming", "/api/screenings/range", "/api/screenings/movie/*").permitAll()
+                // GET /api/screenings - lista seansów dostępna dla wszystkich (w tym repertuar)
+                .requestMatchers("/api/screenings", "/api/screenings/*", "/api/screenings/upcoming", "/api/screenings/range", "/api/screenings/movie/*", "/api/screenings/repertoire").permitAll()
+                // GET /api/reservations/screenings/*/seats - dostępne miejsca (publiczne)
+                .requestMatchers("/api/reservations/screenings/*/seats").permitAll()
                 // Panel admina - tylko dla ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Endpointy admina w API - tylko dla ADMIN
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // Wszystkie inne endpointy wymagają zalogowania
                 .anyRequest().authenticated()
             )

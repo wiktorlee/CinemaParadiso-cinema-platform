@@ -17,12 +17,19 @@ import pl.cinemaparadiso.exception.RoomNotFoundException;
 import pl.cinemaparadiso.exception.ScreeningConflictException;
 import pl.cinemaparadiso.exception.ScreeningNotFoundException;
 import pl.cinemaparadiso.repository.MovieRepository;
+import pl.cinemaparadiso.repository.ReservationSeatRepository;
 import pl.cinemaparadiso.repository.RoomRepository;
 import pl.cinemaparadiso.repository.ScreeningRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import pl.cinemaparadiso.dto.RepertoireDTO;
+import pl.cinemaparadiso.dto.ScreeningTimeDTO;
 
 /**
  * Serwis do zarządzania seansami
@@ -37,6 +44,7 @@ public class ScreeningService {
     private final ScreeningRepository screeningRepository;
     private final MovieRepository movieRepository;
     private final RoomRepository roomRepository;
+    private final ReservationSeatRepository reservationSeatRepository;
     
     private static final int BREAK_TIME_MINUTES = 15; // Przerwa między seansami
     
@@ -47,9 +55,11 @@ public class ScreeningService {
         LocalDateTime endTime = calculateEndTime(screening);
         int totalSeats = screening.getRoom().getTotalRows() * screening.getRoom().getSeatsPerRow();
         
-        // TODO: Oblicz dostępne miejsca (będzie gdy zaimplementujemy rezerwacje)
-        // Na razie wszystkie miejsca są dostępne
-        int availableSeats = totalSeats;
+        // Oblicz dostępne miejsca - policz zarezerwowane miejsca dla tego seansu
+        List<pl.cinemaparadiso.entity.ReservationSeat> reservedSeats = 
+                reservationSeatRepository.findReservedSeatsByScreeningId(screening.getId());
+        int reservedCount = reservedSeats.size();
+        int availableSeats = totalSeats - reservedCount;
         
         return ScreeningDTO.builder()
                 .id(screening.getId())
@@ -279,6 +289,72 @@ public class ScreeningService {
         
         screeningRepository.delete(screening);
         log.info("Seans usunięty pomyślnie: ID={}", id);
+    }
+    
+    /**
+     * Pobiera repertuar dla konkretnej daty
+     * Zwraca listę filmów z ich seansami w danym dniu
+     */
+    @Transactional(readOnly = true)
+    public List<RepertoireDTO> getRepertoireByDate(LocalDate date) {
+        log.info("Pobieranie repertuaru dla daty: {}", date);
+        
+        // Konwertuj LocalDate na LocalDateTime (początek i koniec dnia)
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(23, 59, 59);
+        
+        // Pobierz wszystkie seanse dla tego dnia (używamy Pageable.unpaged() aby pobrać wszystkie)
+        List<Screening> screenings = screeningRepository.findByStartTimeBetween(startOfDay, endOfDay, Pageable.unpaged()).getContent();
+        
+        // Pogrupuj seanse po filmach
+        Map<Long, List<Screening>> screeningsByMovie = screenings.stream()
+                .collect(Collectors.groupingBy(s -> s.getMovie().getId(), LinkedHashMap::new, Collectors.toList()));
+        
+        // Utwórz listę DTO dla każdego filmu
+        List<RepertoireDTO> repertoire = new ArrayList<>();
+        
+        for (Map.Entry<Long, List<Screening>> entry : screeningsByMovie.entrySet()) {
+            List<Screening> movieScreenings = entry.getValue();
+            Screening firstScreening = movieScreenings.get(0);
+            Movie movie = firstScreening.getMovie();
+            
+            // Utwórz listę godzin seansów dla tego filmu
+            List<ScreeningTimeDTO> screeningTimes = movieScreenings.stream()
+                    .map(s -> {
+                        int totalSeats = s.getRoom().getTotalRows() * s.getRoom().getSeatsPerRow();
+                        List<pl.cinemaparadiso.entity.ReservationSeat> reservedSeats = 
+                                reservationSeatRepository.findReservedSeatsByScreeningId(s.getId());
+                        int reservedCount = reservedSeats.size();
+                        int availableSeats = totalSeats - reservedCount;
+                        
+                        return ScreeningTimeDTO.builder()
+                                .screeningId(s.getId())
+                                .startTime(s.getStartTime().toLocalTime())
+                                .roomNumber(s.getRoom().getRoomNumber())
+                                .basePrice(s.getBasePrice())
+                                .vipPrice(s.getVipPrice())
+                                .availableSeats(availableSeats)
+                                .totalSeats(totalSeats)
+                                .build();
+                    })
+                    .sorted((a, b) -> a.getStartTime().compareTo(b.getStartTime()))
+                    .collect(Collectors.toList());
+            
+            // Utwórz DTO dla filmu
+            RepertoireDTO repertoireDTO = RepertoireDTO.builder()
+                    .movieId(movie.getId())
+                    .movieTitle(movie.getTitle())
+                    .moviePosterPath(movie.getPosterPath())
+                    .movieGenre(movie.getGenre())
+                    .movieDurationMinutes(movie.getDurationMinutes())
+                    .screenings(screeningTimes)
+                    .build();
+            
+            repertoire.add(repertoireDTO);
+        }
+        
+        log.info("Znaleziono {} filmów w repertuarze dla daty {}", repertoire.size(), date);
+        return repertoire;
     }
 }
 

@@ -149,6 +149,38 @@ public class GlobalExceptionHandler {
     }
     
     /**
+     * Obsługuje ReservationNotFoundException
+     * Zwraca HTTP 404 Not Found
+     */
+    @ExceptionHandler(ReservationNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleReservationNotFound(ReservationNotFoundException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("Reservation Not Found")
+                .message(ex.getMessage())
+                .build();
+        
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+    
+    /**
+     * Obsługuje SeatNotAvailableException
+     * Zwraca HTTP 409 Conflict
+     */
+    @ExceptionHandler(SeatNotAvailableException.class)
+    public ResponseEntity<ErrorResponse> handleSeatNotAvailable(SeatNotAvailableException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error("Seat Not Available")
+                .message(ex.getMessage())
+                .build();
+        
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+    
+    /**
      * Obsługuje IllegalArgumentException
      * Zwraca HTTP 400 Bad Request
      */

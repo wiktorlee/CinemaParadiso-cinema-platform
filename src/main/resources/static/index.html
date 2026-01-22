@@ -11,38 +11,174 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="bi bi-film"></i> Cinema Paradiso</h1>
-            <nav>
-                <a href="/index.html">Strona Główna</a>
-                <a href="/movies.html">Filmy</a>
-                <a href="/login.html" id="loginLink">Zaloguj się</a>
-                <a href="/register.html" id="registerLink">Zarejestruj się</a>
-                <a href="/profile.html" id="profileLink" style="display: none;">Mój Profil</a>
-                <a href="/admin/movies.html" id="adminMoviesLink" style="display: none;">Zarządzanie Filmami</a>
-                <a href="/admin/rooms.html" id="adminRoomsLink" style="display: none;">Zarządzanie Salami</a>
-                <a href="/admin/screenings.html" id="adminScreeningsLink" style="display: none;">Zarządzanie Seansami</a>
-                <button id="logoutBtn" style="display: none;">Wyloguj</button>
-            </nav>
-        </header>
-
-        <main>
-            <div class="welcome-section">
-                <h2>Witaj w Cinema Paradiso!</h2>
-                <p>System zarządzania rezerwacjami biletów do kina</p>
+    <header class="p-3 text-bg-dark">
+        <div class="container">
+            <div class="header-content">
+                <a href="/index.html" class="logo-section">
+                    <div class="logo-icon">
+                        <i class="bi bi-film"></i>
+                    </div>
+                    <span class="logo-text">Cinema Paradiso</span>
+                </a>
                 
-                <div id="userInfo" style="display: none;">
-                    <h3>Zalogowany jako:</h3>
-                    <p id="userDetails"></p>
-                </div>
-
-                <div id="notLoggedIn">
-                    <p>Zaloguj się lub zarejestruj, aby korzystać z systemu.</p>
+                <ul class="nav-links">
+                    <li><a href="/index.html" class="nav-link">Strona Główna</a></li>
+                    <li><a href="/movies.html" class="nav-link">Filmy</a></li>
+                    <li><a href="/repertuar.html" class="nav-link">Repertuar</a></li>
+                </ul>
+                
+                <div class="header-actions">
+                    <a href="/login.html" id="loginLink" class="btn-header btn-outline-light-custom">Zaloguj się</a>
+                    <a href="/register.html" id="registerLink" class="btn-header btn-warning-custom">Zarejestruj się</a>
+                    <a href="/profile.html" id="profileLink" class="btn-header btn-outline-light-custom" style="display: none;">Mój Profil</a>
+                    
+                    <!-- Dropdown menu dla admina -->
+                    <div class="admin-dropdown" id="adminDropdown" style="display: none;">
+                        <button id="adminDropdownToggle" class="btn-header btn-outline-light-custom admin-dropdown-toggle">
+                            <i class="bi bi-gear"></i> Panel Admina
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="admin-dropdown-menu" id="adminDropdownMenu">
+                            <a href="/admin/movies.html">
+                                <i class="bi bi-film me-2"></i> Zarządzanie Filmami
+                            </a>
+                            <a href="/admin/rooms.html">
+                                <i class="bi bi-door-open me-2"></i> Zarządzanie Salami
+                            </a>
+                            <a href="/admin/screenings.html">
+                                <i class="bi bi-calendar-event me-2"></i> Zarządzanie Seansami
+                            </a>
+                            <a href="/admin/audit-logs.html">
+                                <i class="bi bi-clock-history me-2"></i> Logi Audytowe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <button id="logoutBtn" class="btn-header" style="display: none;">Wyloguj</button>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Carousel -->
+        <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+            </div>
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="carousel-slide-content">
+                        <div class="container">
+                            <div class="carousel-caption text-start">
+                                <h1>Example headline.</h1>
+                                <p>Some representative placeholder content for the first slide of the carousel.</p>
+                                <p><a class="btn btn-lg btn-primary" href="#">Sign up today</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="carousel-slide-content">
+                        <div class="container">
+                            <div class="carousel-caption">
+                                <h1>Another example headline.</h1>
+                                <p>Some representative placeholder content for the second slide of the carousel.</p>
+                                <p><a class="btn btn-lg btn-primary" href="#">Learn more</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="carousel-slide-content">
+                        <div class="container">
+                            <div class="carousel-caption text-end">
+                                <h1>One more for good measure.</h1>
+                                <p>Some representative placeholder content for the third slide of this carousel.</p>
+                                <p><a class="btn btn-lg btn-primary" href="#">Browse gallery</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+
+        <div class="container">
+            <!-- Informacje o użytkowniku (opcjonalnie można przenieść gdzie indziej) -->
+            <div id="userInfo" style="display: none; margin-top: 2rem;">
+                <h3>Zalogowany jako:</h3>
+                <p id="userDetails"></p>
+            </div>
+
+            <div id="notLoggedIn" style="display: none; margin-top: 2rem;">
+                <p>Zaloguj się lub zarejestruj, aby korzystać z systemu.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h5>Cinema Paradiso</h5>
+                    <p style="color: rgba(255, 255, 255, 0.7); margin: 0;">
+                        System zarządzania rezerwacjami biletów do kina. 
+                        Najlepsze filmy w najlepszych cenach.
+                    </p>
+                </div>
+                
+                <div class="footer-section">
+                    <h5>Nawigacja</h5>
+                    <ul>
+                        <li><a href="/index.html">Strona Główna</a></li>
+                        <li><a href="/movies.html">Filmy</a></li>
+                        <li><a href="/repertuar.html">Repertuar</a></li>
+                        <li><a href="/login.html">Zaloguj się</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h5>Informacje</h5>
+                    <ul>
+                        <li><a href="/register.html">Rejestracja</a></li>
+                        <li><a href="/profile.html">Mój Profil</a></li>
+                        <li><a href="/reservation.html">Rezerwacje</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h5>Kontakt</h5>
+                    <p style="color: rgba(255, 255, 255, 0.7); margin: 0 0 0.5rem 0;">
+                        Email: kontakt@cinemaparadiso.pl<br>
+                        Telefon: +48 123 456 789
+                    </p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div>
+                    <p style="margin: 0; color: rgba(255, 255, 255, 0.6);">
+                        © 2025 Cinema Paradiso. Wszelkie prawa zastrzeżone.
+                    </p>
+                </div>
+                <div class="footer-social">
+                    <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script src="/js/api.js"></script>
     <script src="/js/navigation.js"></script>

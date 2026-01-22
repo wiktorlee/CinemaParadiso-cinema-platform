@@ -1,0 +1,35 @@
+package pl.cinemaparadiso.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import pl.cinemaparadiso.entity.ReservationSeat;
+
+import java.util.List;
+
+/**
+ * Repository dla encji ReservationSeat (Miejsce w Rezerwacji)
+ */
+@Repository
+public interface ReservationSeatRepository extends JpaRepository<ReservationSeat, Long> {
+    
+    /**
+     * Znajduje wszystkie zarezerwowane miejsca dla danego seansu (aktywne rezerwacje)
+     */
+    @Query("SELECT rs FROM ReservationSeat rs " +
+           "WHERE rs.reservation.screening.id = :screeningId " +
+           "AND rs.reservation.status = 'ACTIVE'")
+    List<ReservationSeat> findReservedSeatsByScreeningId(@Param("screeningId") Long screeningId);
+    
+    /**
+     * Sprawdza czy miejsce jest już zarezerwowane na dany seans
+     */
+    @Query("SELECT COUNT(rs) > 0 FROM ReservationSeat rs " +
+           "WHERE rs.seat.id = :seatId " +
+           "AND rs.reservation.screening.id = :screeningId " +
+           "AND rs.reservation.status = 'ACTIVE'")
+    boolean isSeatReservedForScreening(@Param("seatId") Long seatId, @Param("screeningId") Long screeningId);
+}
+
+

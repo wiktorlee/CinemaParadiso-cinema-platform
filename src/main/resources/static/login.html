@@ -10,61 +10,102 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1><i class="bi bi-film"></i> Cinema Paradiso</h1>
-            <nav>
-                <a href="/index.html">Strona Główna</a>
-                <a href="/movies.html">Filmy</a>
-                <a href="/login.html" id="loginLink">Zaloguj się</a>
-                <a href="/register.html" id="registerLink">Zarejestruj się</a>
-                <a href="/profile.html" id="profileLink" style="display: none;">Mój Profil</a>
-                <a href="/admin/movies.html" id="adminMoviesLink" style="display: none;">Zarządzanie Filmami</a>
-                <a href="/admin/rooms.html" id="adminRoomsLink" style="display: none;">Zarządzanie Salami</a>
-                <a href="/admin/screenings.html" id="adminScreeningsLink" style="display: none;">Zarządzanie Seansami</a>
-                <button id="logoutBtn" style="display: none;">Wyloguj</button>
-            </nav>
-        </header>
-
-        <main>
-            <div class="auth-container">
-                <h2>Logowanie</h2>
+<body class="d-flex align-items-center py-4 bg-body-tertiary">
+    <header class="p-3 text-bg-dark position-fixed top-0 w-100" style="z-index: 1000;">
+        <div class="container">
+            <div class="header-content">
+                <a href="/index.html" class="logo-section">
+                    <div class="logo-icon">
+                        <i class="bi bi-film"></i>
+                    </div>
+                    <span class="logo-text">Cinema Paradiso</span>
+                </a>
                 
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label for="username">Username:</label>
-                        <input 
-                            type="text" 
-                            id="username" 
-                            name="username" 
-                            required
-                            placeholder="Wprowadź username"
-                        >
+                <ul class="nav-links">
+                    <li><a href="/index.html" class="nav-link">Strona Główna</a></li>
+                    <li><a href="/movies.html" class="nav-link">Filmy</a></li>
+                    <li><a href="/repertuar.html" class="nav-link">Repertuar</a></li>
+                </ul>
+                
+                <div class="header-actions">
+                    <a href="/login.html" id="loginLink" class="btn-header btn-outline-light-custom">Zaloguj się</a>
+                    <a href="/register.html" id="registerLink" class="btn-header btn-warning-custom">Zarejestruj się</a>
+                    <a href="/profile.html" id="profileLink" class="btn-header btn-outline-light-custom" style="display: none;">Mój Profil</a>
+                    
+                    <!-- Dropdown menu dla admina -->
+                    <div class="admin-dropdown" id="adminDropdown" style="display: none;">
+                        <button id="adminDropdownToggle" class="btn-header btn-outline-light-custom admin-dropdown-toggle">
+                            <i class="bi bi-gear"></i> Panel Admina
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="admin-dropdown-menu" id="adminDropdownMenu">
+                            <a href="/admin/movies.html">
+                                <i class="bi bi-film me-2"></i> Zarządzanie Filmami
+                            </a>
+                            <a href="/admin/rooms.html">
+                                <i class="bi bi-door-open me-2"></i> Zarządzanie Salami
+                            </a>
+                            <a href="/admin/screenings.html">
+                                <i class="bi bi-calendar-event me-2"></i> Zarządzanie Seansami
+                            </a>
+                            <a href="/admin/audit-logs.html">
+                                <i class="bi bi-clock-history me-2"></i> Logi Audytowe
+                            </a>
+                        </div>
                     </div>
-
-                    <div class="form-group">
-                        <label for="password">Hasło:</label>
-                        <input 
-                            type="password" 
-                            id="password" 
-                            name="password" 
-                            required
-                            placeholder="Wprowadź hasło"
-                        >
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Zaloguj się</button>
-                </form>
-
-                <div id="message" class="message"></div>
-
-                <p class="auth-link">
-                    Nie masz konta? <a href="/register.html">Zarejestruj się</a>
-                </p>
+                    
+                    <button id="logoutBtn" class="btn-header" style="display: none;">Wyloguj</button>
+                </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </header>
+
+    <main class="form-signin w-100 m-auto" style="margin-top: 100px !important;">
+        <form id="loginForm">
+            <div class="text-center mb-4">
+                <div class="logo-icon-large">
+                    <i class="bi bi-film"></i>
+                </div>
+                <h1 class="h3 mb-3 fw-normal">Zaloguj się</h1>
+            </div>
+            
+            <div class="form-floating">
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="floatingInput" 
+                    placeholder="username"
+                    name="username"
+                    required
+                >
+                <label for="floatingInput">Username</label>
+            </div>
+            
+            <div class="form-floating">
+                <input 
+                    type="password" 
+                    class="form-control" 
+                    id="floatingPassword" 
+                    placeholder="Password"
+                    name="password"
+                    required
+                >
+                <label for="floatingPassword">Hasło</label>
+            </div>
+            
+            <div id="message" class="message" style="display: none;"></div>
+            
+            <button class="btn btn-primary w-100 py-2" type="submit">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Zaloguj się
+            </button>
+            
+            <p class="mt-3 text-center text-body-secondary">
+                Nie masz konta? <a href="/register.html" class="text-decoration-none">Zarejestruj się</a>
+            </p>
+            
+            <p class="mt-5 mb-3 text-body-secondary text-center">© 2025 Cinema Paradiso</p>
+        </form>
+    </main>
 
     <script src="/js/api.js"></script>
     <script src="/js/navigation.js"></script>
@@ -73,6 +114,3 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-
-

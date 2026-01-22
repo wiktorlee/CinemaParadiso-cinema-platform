@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Filmy - Cinema Paradiso</title>
+    <title>Repertuar - Cinema Paradiso</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -62,47 +62,51 @@
 
     <div class="container">
         <main>
-            <h2>Nasze Filmy</h2>
+            <h2><i class="bi bi-calendar-event"></i> Repertuar</h2>
+            <p class="lead">Wybierz datę, aby zobaczyć jakie filmy są grane i w jakich godzinach</p>
             
-            <!-- Wyszukiwarka i filtry -->
-            <div class="search-container">
-                <form id="searchForm" class="search-form">
-                    <div class="search-input-group">
+            <!-- Wybór daty -->
+            <div class="date-selector-container" style="margin: 30px 0;">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <label for="dateInput" class="form-label"><strong>Wybierz datę:</strong></label>
                         <input 
-                            type="text" 
-                            id="searchInput" 
-                            placeholder="Szukaj filmu po tytule..." 
-                            class="search-input"
+                            type="date" 
+                            id="dateInput" 
+                            class="form-control form-control-lg"
+                            required
                         >
-                        <button type="submit" class="btn btn-primary search-btn">Szukaj</button>
-                        <button type="button" id="clearSearchBtn" class="btn btn-secondary" style="display: none;">Wyczyść</button>
                     </div>
-                    
-                    <div class="filter-group">
-                        <label for="genreFilter">Gatunek:</label>
-                        <select id="genreFilter" class="filter-select">
-                            <option value="">Wszystkie gatunki</option>
-                            <option value="Science Fiction">Science Fiction</option>
-                            <option value="Akcja">Akcja</option>
-                            <option value="Komedia">Komedia</option>
-                            <option value="Dramat">Dramat</option>
-                            <option value="Thriller">Thriller</option>
-                            <option value="Horror">Horror</option>
-                        </select>
+                    <div class="col-md-4">
+                        <button 
+                            type="button" 
+                            id="todayBtn" 
+                            class="btn btn-golden"
+                            style="margin-top: 32px;"
+                        >
+                            <i class="bi bi-calendar-day"></i> Dzisiaj
+                        </button>
+                        <button 
+                            type="button" 
+                            id="tomorrowBtn" 
+                            class="btn btn-golden"
+                            style="margin-top: 32px; margin-left: 10px;"
+                        >
+                            <i class="bi bi-calendar-plus"></i> Jutro
+                        </button>
                     </div>
-                </form>
+                </div>
             </div>
             
-            <!-- Informacja o wynikach -->
-            <div id="resultsInfo" class="results-info" style="display: none;"></div>
-            
-            <!-- Lista filmów -->
-            <div id="moviesContainer" class="movies-grid">
-                <p>Ładowanie filmów...</p>
+            <!-- Komunikat o braku seansów -->
+            <div id="noScreeningsMessage" class="alert alert-info" style="display: none;">
+                <i class="bi bi-info-circle"></i> Brak seansów w wybranym dniu.
             </div>
             
-            <!-- Paginacja -->
-            <div id="paginationContainer" class="pagination-container" style="display: none;"></div>
+            <!-- Lista filmów z seansami -->
+            <div id="repertoireContainer" class="repertoire-container">
+                <p class="text-muted">Wybierz datę, aby zobaczyć repertuar</p>
+            </div>
         </main>
     </div>
 
@@ -162,7 +166,7 @@
 
     <script src="/js/api.js"></script>
     <script src="/js/navigation.js"></script>
-    <script src="/js/movies.js"></script>
+    <script src="/js/repertuar.js"></script>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

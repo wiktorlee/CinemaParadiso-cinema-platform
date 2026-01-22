@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userDetailsP = document.getElementById('userDetails');
     const notLoggedInDiv = document.getElementById('notLoggedIn');
     
+    // Inicjalizacja carousel (Bootstrap automatycznie inicjalizuje carousel z data-bs-ride="carousel")
+    // Możemy dodać dodatkowe opcje jeśli potrzeba
+    
     // Sprawdź czy użytkownik jest zalogowany (tylko dla wyświetlenia informacji na stronie głównej)
     try {
         const user = await getCurrentUser();

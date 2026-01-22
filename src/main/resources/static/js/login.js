@@ -10,14 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         
         // Pobierz dane z formularza
-        const formData = new FormData(form);
-        const username = formData.get('username');
-        const password = formData.get('password');
+        const username = document.getElementById('floatingInput').value;
+        const password = document.getElementById('floatingPassword').value;
         
         // Wyłącz przycisk podczas wysyłania
         const submitButton = form.querySelector('button[type="submit"]');
         submitButton.disabled = true;
-        submitButton.textContent = 'Logowanie...';
+        const originalText = submitButton.innerHTML;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logowanie...';
         
         try {
             // Wywołaj API
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Włącz przycisk ponownie
             submitButton.disabled = false;
-            submitButton.textContent = 'Zaloguj się';
+            submitButton.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Zaloguj się';
         }
     });
 });

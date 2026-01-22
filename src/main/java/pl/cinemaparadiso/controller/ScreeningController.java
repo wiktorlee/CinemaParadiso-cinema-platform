@@ -17,9 +17,12 @@ import pl.cinemaparadiso.dto.ScreeningDTO;
 import pl.cinemaparadiso.dto.UpdateScreeningDTO;
 import pl.cinemaparadiso.service.ScreeningService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import pl.cinemaparadiso.dto.RepertoireDTO;
 
 /**
  * Controller dla endpointów związanych z seansami
@@ -213,6 +216,19 @@ public class ScreeningController {
         log.info("DELETE /api/screenings/{} - usuwanie seansu", id);
         screeningService.deleteScreening(id);
         return ResponseEntity.noContent().build();
+    }
+    
+    /**
+     * Pobiera repertuar dla konkretnej daty
+     * 
+     * GET /api/screenings/repertoire?date=2024-01-15
+     */
+    @GetMapping("/repertoire")
+    public ResponseEntity<List<RepertoireDTO>> getRepertoire(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        log.info("GET /api/screenings/repertoire?date={} - pobieranie repertuaru", date);
+        List<RepertoireDTO> repertoire = screeningService.getRepertoireByDate(date);
+        return ResponseEntity.ok(repertoire);
     }
 }
 

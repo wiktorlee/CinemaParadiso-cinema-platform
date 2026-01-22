@@ -10,18 +10,18 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         
         // Pobierz dane z formularza
-        const formData = new FormData(form);
         const userData = {
-            username: formData.get('username'),
-            password: formData.get('password'),
-            firstName: formData.get('firstName'),
-            lastName: formData.get('lastName'),
+            username: document.getElementById('floatingUsername').value,
+            password: document.getElementById('floatingPassword').value,
+            firstName: document.getElementById('floatingFirstName').value,
+            lastName: document.getElementById('floatingLastName').value,
         };
         
         // Wyłącz przycisk podczas wysyłania
         const submitButton = form.querySelector('button[type="submit"]');
         submitButton.disabled = true;
-        submitButton.textContent = 'Rejestrowanie...';
+        const originalText = submitButton.innerHTML;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Rejestrowanie...';
         
         try {
             // Wywołaj API
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Włącz przycisk ponownie
             submitButton.disabled = false;
-            submitButton.textContent = 'Zarejestruj się';
+            submitButton.innerHTML = '<i class="bi bi-person-plus me-2"></i>Zarejestruj się';
         }
     });
 });

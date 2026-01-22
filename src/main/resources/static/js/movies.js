@@ -271,12 +271,24 @@ window.showMovieDetails = async function(movieId) {
                         ${movie.year ? `<p><strong>Rok produkcji:</strong> ${movie.year}</p>` : ''}
                         ${movie.releaseDate ? `<p><strong>Data premiery:</strong> ${new Date(movie.releaseDate).toLocaleDateString('pl-PL')}</p>` : ''}
                         ${movie.description ? `<div class="movie-modal-description"><strong>Opis:</strong><p>${movie.description}</p></div>` : ''}
+                        <div class="movie-modal-screenings" id="screenings-${movieId}">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <p><strong>Seanse:</strong></p>
+                                <button class="btn btn-sm btn-secondary" onclick="refreshScreenings(${movieId})" id="refreshBtn-${movieId}">
+                                    <i class="bi bi-arrow-clockwise"></i> Odśwież
+                                </button>
+                            </div>
+                            <p class="info-message">Ładowanie seansów...</p>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
         
         document.body.appendChild(modal);
+        
+        // Załaduj seanse dla tego filmu
+        loadScreeningsForMovie(movieId);
         
         // Obsługa zamknięcia modala
         const closeBtn = modal.querySelector('.movie-modal-close');
@@ -303,5 +315,85 @@ window.showMovieDetails = async function(movieId) {
         console.error('Error loading movie details:', error);
         alert('Wystąpił błąd podczas ładowania szczegółów filmu.');
     }
+}
+
+/**
+ * Ładuje seanse dla danego filmu
+ */
+async function loadScreeningsForMovie(movieId) {
+    const container = document.getElementById(`screenings-${movieId}`);
+    
+    try {
+        const response = await getScreeningsByMovie(movieId, 0, 100);
+        const screenings = response.content || [];
+        
+        // Filtruj tylko przyszłe seanse
+        const now = new Date();
+        const upcomingScreenings = screenings.filter(screening => {
+            const screeningDate = new Date(screening.startTime);
+            return screeningDate > now;
+        }).sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+        
+        if (upcomingScreenings.length === 0) {
+            container.innerHTML = '<p class="info-message">Brak dostępnych seansów dla tego filmu.</p>';
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="screenings-list">
+                ${upcomingScreenings.map(screening => {
+                    const date = new Date(screening.startTime);
+                    const dateStr = date.toLocaleDateString('pl-PL', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    });
+                    const timeStr = date.toLocaleTimeString('pl-PL', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    return `
+                        <div class="screening-item" style="padding: 10px; margin: 5px 0; background: var(--light); border-radius: 5px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${dateStr} ${timeStr}</strong> - Sala ${screening.roomNumber}
+                                <br>
+                                <small>Cena: ${screening.basePrice.toFixed(2)} PLN</small>
+                                ${screening.availableSeats !== undefined ? `<br><small>Dostępne miejsca: ${screening.availableSeats}/${screening.totalSeats}</small>` : ''}
+                            </div>
+                            <a href="/reservation.html?screeningId=${screening.id}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-ticket-perforated"></i> Rezerwuj
+                            </a>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error loading screenings:', error);
+        container.innerHTML = '<p class="error-message">Nie udało się załadować seansów.</p>';
+    }
+}
+
+/**
+ * Odświeża listę seansów dla filmu
+ */
+window.refreshScreenings = function(movieId) {
+    const container = document.getElementById(`screenings-${movieId}`);
+    const refreshBtn = document.getElementById(`refreshBtn-${movieId}`);
+    
+    if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Odświeżanie...';
+    }
+    
+    container.innerHTML = '<p class="info-message">Ładowanie seansów...</p>';
+    
+    loadScreeningsForMovie(movieId).finally(() => {
+        if (refreshBtn) {
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Odśwież';
+        }
+    });
 }
 

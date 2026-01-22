@@ -11,22 +11,56 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="bi bi-film"></i> Cinema Paradiso</h1>
-            <nav>
-                <a href="/index.html">Strona Główna</a>
-                <a href="/movies.html">Filmy</a>
-                <a href="/login.html" id="loginLink" style="display: none;">Zaloguj się</a>
-                <a href="/register.html" id="registerLink" style="display: none;">Zarejestruj się</a>
-                <a href="/profile.html" id="profileLink">Mój Profil</a>
-                <a href="/admin/movies.html" id="adminMoviesLink" style="display: none;">Zarządzanie Filmami</a>
-                <a href="/admin/rooms.html" id="adminRoomsLink" style="display: none;">Zarządzanie Salami</a>
-                <a href="/admin/screenings.html" id="adminScreeningsLink" style="display: none;">Zarządzanie Seansami</a>
-                <button id="logoutBtn" style="display: none;">Wyloguj</button>
-            </nav>
-        </header>
+    <header class="p-3 text-bg-dark">
+        <div class="container">
+            <div class="header-content">
+                <a href="/index.html" class="logo-section">
+                    <div class="logo-icon">
+                        <i class="bi bi-film"></i>
+                    </div>
+                    <span class="logo-text">Cinema Paradiso</span>
+                </a>
+                
+                <ul class="nav-links">
+                    <li><a href="/index.html" class="nav-link">Strona Główna</a></li>
+                    <li><a href="/movies.html" class="nav-link">Filmy</a></li>
+                    <li><a href="/repertuar.html" class="nav-link">Repertuar</a></li>
+                </ul>
+                
+                <div class="header-actions">
+                    <a href="/login.html" id="loginLink" class="btn-header btn-outline-light-custom" style="display: none;">Zaloguj się</a>
+                    <a href="/register.html" id="registerLink" class="btn-header btn-warning-custom" style="display: none;">Zarejestruj się</a>
+                    <a href="/profile.html" id="profileLink" class="btn-header btn-outline-light-custom">Mój Profil</a>
+                    
+                    <!-- Dropdown menu dla admina -->
+                    <div class="admin-dropdown" id="adminDropdown" style="display: none;">
+                        <button id="adminDropdownToggle" class="btn-header btn-outline-light-custom admin-dropdown-toggle">
+                            <i class="bi bi-gear"></i> Panel Admina
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="admin-dropdown-menu" id="adminDropdownMenu">
+                            <a href="/admin/movies.html">
+                                <i class="bi bi-film me-2"></i> Zarządzanie Filmami
+                            </a>
+                            <a href="/admin/rooms.html">
+                                <i class="bi bi-door-open me-2"></i> Zarządzanie Salami
+                            </a>
+                            <a href="/admin/screenings.html">
+                                <i class="bi bi-calendar-event me-2"></i> Zarządzanie Seansami
+                            </a>
+                            <a href="/admin/audit-logs.html">
+                                <i class="bi bi-clock-history me-2"></i> Logi Audytowe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <button id="logoutBtn" class="btn-header" style="display: none;">Wyloguj</button>
+                </div>
+            </div>
+        </div>
+    </header>
 
+    <div class="container">
         <main>
             <div class="profile-container">
                 <h2>Mój Profil</h2>
@@ -39,6 +73,35 @@
                         <p><strong>Imię:</strong> <span id="firstName"></span></p>
                         <p><strong>Nazwisko:</strong> <span id="lastName"></span></p>
                         <p><strong>Rola:</strong> <span id="role"></span></p>
+                    </div>
+                </div>
+
+                <!-- Zmiana hasła -->
+                <div class="profile-section">
+                    <h3>Zmiana hasła</h3>
+                    <div id="changePasswordContainer">
+                        <form id="changePasswordForm" style="max-width: 500px;">
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label for="currentPassword">Aktualne hasło *</label>
+                                <input type="password" id="currentPassword" name="currentPassword" required class="form-control">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label for="newPassword">Nowe hasło *</label>
+                                <input type="password" id="newPassword" name="newPassword" required minlength="6" class="form-control">
+                                <small class="form-text text-muted">Minimum 6 znaków</small>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label for="confirmPassword">Potwierdź nowe hasło *</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6" class="form-control">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-key"></i> Zmień hasło
+                            </button>
+                        </form>
+                        <div id="changePasswordMessage" style="margin-top: 15px;"></div>
                     </div>
                 </div>
 
