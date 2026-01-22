@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const logoutBtn = document.getElementById('logoutBtn');
     
     // Sprawdź czy użytkownik jest zalogowany i jest adminem
+    // Nawigacja jest obsługiwana przez navigation.js
     try {
         const user = await getCurrentUser();
         if (user.role !== 'ADMIN') {
@@ -27,16 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
-    // Obsługa wylogowania
-    logoutBtn.addEventListener('click', async () => {
-        try {
-            await logout();
-            window.location.href = '/index.html';
-        } catch (error) {
-            console.error('Logout error:', error);
-            window.location.href = '/index.html';
-        }
-    });
+    // Obsługa wylogowania jest w navigation.js
     
     // Drag & Drop dla okładki
     fileUploadArea.addEventListener('dragover', (e) => {

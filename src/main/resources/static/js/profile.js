@@ -3,10 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const logoutBtn = document.getElementById('logoutBtn');
-    
-    const adminMoviesLink = document.getElementById('adminMoviesLink');
-    const adminRoomsLink = document.getElementById('adminRoomsLink');
+    // Nawigacja jest obsługiwana przez navigation.js
     
     // Sprawdź czy użytkownik jest zalogowany
     try {
@@ -17,15 +14,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('firstName').textContent = user.firstName;
         document.getElementById('lastName').textContent = user.lastName;
         document.getElementById('role').textContent = user.role;
-        
-        // Pokaż przycisk wylogowania
-        logoutBtn.style.display = 'inline-block';
-        
-        // Jeśli admin, pokaż linki do panelu admina
-        if (user.role === 'ADMIN') {
-            if (adminMoviesLink) adminMoviesLink.style.display = 'inline-block';
-            if (adminRoomsLink) adminRoomsLink.style.display = 'inline-block';
-        }
         
         // Załaduj rezerwacje (na razie placeholder)
         loadReservations();
@@ -39,16 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = '/login.html';
     }
     
-    // Obsługa wylogowania
-    logoutBtn.addEventListener('click', async () => {
-        try {
-            await logout();
-            window.location.href = '/index.html';
-        } catch (error) {
-            console.error('Logout error:', error);
-            window.location.href = '/index.html';
-        }
-    });
+    // Obsługa wylogowania jest w navigation.js
 });
 
 /**

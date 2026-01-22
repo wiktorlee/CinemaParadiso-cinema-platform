@@ -4,18 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Filmy - Cinema Paradiso</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🎬 Cinema Paradiso</h1>
+            <h1><i class="bi bi-film"></i> Cinema Paradiso</h1>
             <nav>
                 <a href="/index.html">Strona Główna</a>
                 <a href="/movies.html">Filmy</a>
-                <a href="/profile.html" id="profileLink" style="display: none;">Mój Profil</a>
-                <a href="/admin/movies.html" id="adminLink" style="display: none;">Zarządzanie Filmami</a>
                 <a href="/login.html" id="loginLink">Zaloguj się</a>
+                <a href="/register.html" id="registerLink">Zarejestruj się</a>
+                <a href="/profile.html" id="profileLink" style="display: none;">Mój Profil</a>
+                <a href="/admin/movies.html" id="adminMoviesLink" style="display: none;">Zarządzanie Filmami</a>
+                <a href="/admin/rooms.html" id="adminRoomsLink" style="display: none;">Zarządzanie Salami</a>
+                <a href="/admin/screenings.html" id="adminScreeningsLink" style="display: none;">Zarządzanie Seansami</a>
                 <button id="logoutBtn" style="display: none;">Wyloguj</button>
             </nav>
         </header>
@@ -66,7 +73,10 @@
     </div>
 
     <script src="/js/api.js"></script>
+    <script src="/js/navigation.js"></script>
     <script src="/js/movies.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 
