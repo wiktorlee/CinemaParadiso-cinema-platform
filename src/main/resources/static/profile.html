@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mój Profil - Cinema Paradiso</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Cinema Paradiso</h1>
+            <nav>
+                <a href="/index.html">Strona Główna</a>
+                <a href="/movies.html">Filmy</a>
+                <a href="/profile.html">Mój Profil</a>
+                <a href="/admin/movies.html" id="adminMoviesLink" style="display: none;">Zarządzanie Filmami</a>
+                <a href="/admin/rooms.html" id="adminRoomsLink" style="display: none;">Zarządzanie Salami</a>
+                <button id="logoutBtn" style="display: none;">Wyloguj</button>
+            </nav>
+        </header>
+
+        <main>
+            <div class="profile-container">
+                <h2>Mój Profil</h2>
+                
+                <!-- Informacje o użytkowniku -->
+                <div class="profile-section">
+                    <h3>Informacje osobiste</h3>
+                    <div id="userInfo" class="user-info">
+                        <p><strong>Username:</strong> <span id="username"></span></p>
+                        <p><strong>Imię:</strong> <span id="firstName"></span></p>
+                        <p><strong>Nazwisko:</strong> <span id="lastName"></span></p>
+                        <p><strong>Rola:</strong> <span id="role"></span></p>
+                    </div>
+                </div>
+
+                <!-- Moje rezerwacje -->
+                <div class="profile-section">
+                    <h3>Moje rezerwacje</h3>
+                    <div id="reservationsContainer">
+                        <p class="info-message">Ładowanie rezerwacji...</p>
+                    </div>
+                </div>
+
+                <!-- Moje recenzje -->
+                <div class="profile-section">
+                    <h3>Moje recenzje</h3>
+                    <div id="reviewsContainer">
+                        <p class="info-message">Ładowanie recenzji...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/profile.js"></script>
+</body>
+</html>
+

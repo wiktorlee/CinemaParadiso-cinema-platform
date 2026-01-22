@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zarządzanie Salami - Cinema Paradiso</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Cinema Paradiso - Panel Admina</h1>
+            <nav>
+                <a href="/index.html">Strona Główna</a>
+                <a href="/movies.html">Filmy</a>
+                <a href="/admin/movies.html">Zarządzanie Filmami</a>
+                <a href="/admin/rooms.html">Zarządzanie Salami</a>
+                <button id="logoutBtn">Wyloguj</button>
+            </nav>
+        </header>
+
+        <main>
+            <h2>Zarządzanie Salami</h2>
+            
+            <!-- Przyciski szybkich akcji -->
+            <div class="quick-actions" style="margin-bottom: 20px;">
+                <button class="btn btn-secondary" onclick="showBulkCreateModal()">Utwórz wiele sal</button>
+            </div>
+            
+            <!-- Formularz dodawania/edycji sali -->
+            <div class="admin-form-container">
+                <h3 id="formTitle">Dodaj nową salę</h3>
+                <form id="roomForm">
+                    <input type="hidden" id="roomId">
+                    
+                    <div class="form-group">
+                        <label for="roomNumber">Numer sali *</label>
+                        <input type="text" id="roomNumber" name="roomNumber" placeholder="np. Sala 1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="totalRows">Liczba rzędów *</label>
+                        <input type="number" id="totalRows" name="totalRows" min="1" max="50" required>
+                        <small>Dwa środkowe rzędy będą typu VIP</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="seatsPerRow">Liczba miejsc w rzędzie *</label>
+                        <input type="number" id="seatsPerRow" name="seatsPerRow" min="1" max="50" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Opis sali (opcjonalne)</label>
+                        <textarea id="description" name="description" rows="3" placeholder="np. Sala z systemem dźwięku Dolby Atmos"></textarea>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Dodaj salę</button>
+                        <button type="button" class="btn btn-secondary" id="cancelBtn" style="display: none;">Anuluj</button>
+                    </div>
+                </form>
+
+                <div id="message" class="message"></div>
+            </div>
+
+            <!-- Lista sal -->
+            <div class="admin-rooms-list">
+                <h3>Lista sal</h3>
+                <div id="adminRoomsContainer">
+                    <p>Ładowanie sal...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal z wizualizacją sali -->
+    <div id="roomVisualizationModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <span class="close" id="closeModal">&times;</span>
+            <h3 id="modalRoomTitle">Wizualizacja sali</h3>
+            <div id="roomVisualization">
+                <!-- Siatka miejsc będzie tutaj -->
+            </div>
+            <div class="seat-legend">
+                <div class="legend-item">
+                    <div class="legend-seat seat-standard"></div>
+                    <span>STANDARD</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-seat seat-vip"></div>
+                    <span>VIP</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal do masowego tworzenia sal -->
+    <div id="bulkCreateModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" id="closeBulkModal">&times;</span>
+            <h3>Utwórz wiele sal</h3>
+            <form id="bulkCreateForm">
+                <div class="form-group">
+                    <label for="bulkPrefix">Prefix numeru sali *</label>
+                    <input type="text" id="bulkPrefix" name="bulkPrefix" placeholder="np. Sala" value="Sala" required>
+                </div>
+                <div class="form-group">
+                    <label for="bulkStartNumber">Numer początkowy *</label>
+                    <input type="number" id="bulkStartNumber" name="bulkStartNumber" min="1" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="bulkCount">Liczba sal do utworzenia *</label>
+                    <input type="number" id="bulkCount" name="bulkCount" min="1" max="20" value="5" required>
+                </div>
+                <div class="form-group">
+                    <label for="bulkTotalRows">Liczba rzędów *</label>
+                    <input type="number" id="bulkTotalRows" name="bulkTotalRows" min="1" max="50" value="10" required>
+                    <small>Dwa środkowe rzędy będą typu VIP</small>
+                </div>
+                <div class="form-group">
+                    <label for="bulkSeatsPerRow">Liczba miejsc w rzędzie *</label>
+                    <input type="number" id="bulkSeatsPerRow" name="bulkSeatsPerRow" min="1" max="50" value="15" required>
+                </div>
+                <div class="form-group">
+                    <label for="bulkDescription">Opis sali (opcjonalne)</label>
+                    <textarea id="bulkDescription" name="bulkDescription" rows="3"></textarea>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-primary">Utwórz sale</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeBulkCreateModal()">Anuluj</button>
+                </div>
+            </form>
+            <div id="bulkMessage" class="message"></div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/admin-rooms.js"></script>
+</body>
+</html>
+

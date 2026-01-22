@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rejestracja - Cinema Paradiso</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Cinema Paradiso</h1>
+            <nav>
+                <a href="/index.html">Strona Główna</a>
+                <a href="/login.html">Zaloguj się</a>
+                <a href="/register.html">Zarejestruj się</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="auth-container">
+                <h2>Rejestracja</h2>
+                
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            required 
+                            minlength="3" 
+                            maxlength="20"
+                            pattern="[a-zA-Z0-9_]+"
+                            placeholder="np. jan_kowalski"
+                        >
+                        <small>3-20 znaków, tylko litery, cyfry i podkreślenie</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Hasło:</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            required 
+                            minlength="6"
+                            placeholder="Minimum 6 znaków"
+                        >
+                        <small>Minimum 6 znaków</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="firstName">Imię:</label>
+                        <input 
+                            type="text" 
+                            id="firstName" 
+                            name="firstName" 
+                            required
+                            placeholder="Jan"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lastName">Nazwisko:</label>
+                        <input 
+                            type="text" 
+                            id="lastName" 
+                            name="lastName" 
+                            required
+                            placeholder="Kowalski"
+                        >
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Zarejestruj się</button>
+                </form>
+
+                <div id="message" class="message"></div>
+
+                <p class="auth-link">
+                    Masz już konto? <a href="/login.html">Zaloguj się</a>
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/register.js"></script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinema Paradiso - Strona Główna</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Cinema Paradiso</h1>
+            <nav>
+                <a href="/index.html">Strona Główna</a>
+                <a href="/movies.html">Filmy</a>
+                <a href="/login.html" id="loginLink">Zaloguj się</a>
+                <a href="/register.html" id="registerLink">Zarejestruj się</a>
+                <a href="/profile.html" id="profileLink" style="display: none;">Mój Profil</a>
+                <a href="/admin/movies.html" id="adminMoviesLink" style="display: none;">Zarządzanie Filmami</a>
+                <a href="/admin/rooms.html" id="adminRoomsLink" style="display: none;">Zarządzanie Salami</a>
+                <a href="/admin/screenings.html" id="adminScreeningsLink" style="display: none;">Zarządzanie Seansami</a>
+                <button id="logoutBtn" style="display: none;">Wyloguj</button>
+            </nav>
+        </header>
+
+        <main>
+            <div class="welcome-section">
+                <h2>Witaj w Cinema Paradiso!</h2>
+                <p>System zarządzania rezerwacjami biletów do kina</p>
+                
+                <div id="userInfo" style="display: none;">
+                    <h3>Zalogowany jako:</h3>
+                    <p id="userDetails"></p>
+                </div>
+
+                <div id="notLoggedIn">
+                    <p>Zaloguj się lub zarejestruj, aby korzystać z systemu.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
+
+

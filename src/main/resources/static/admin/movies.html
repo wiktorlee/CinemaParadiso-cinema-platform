@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zarządzanie Filmami - Cinema Paradiso</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Cinema Paradiso - Panel Admina</h1>
+            <nav>
+                <a href="/index.html">Strona Główna</a>
+                <a href="/movies.html">Filmy</a>
+                <a href="/admin/movies.html">Zarządzanie Filmami</a>
+                <a href="/admin/rooms.html">Zarządzanie Salami</a>
+                <button id="logoutBtn">Wyloguj</button>
+            </nav>
+        </header>
+
+        <main>
+            <h2>Zarządzanie Filmami</h2>
+            
+            <!-- Formularz dodawania/edycji filmu -->
+            <div class="admin-form-container">
+                <h3 id="formTitle">Dodaj nowy film</h3>
+                <form id="movieForm">
+                    <input type="hidden" id="movieId">
+                    
+                    <div class="form-group">
+                        <label for="title">Tytuł *</label>
+                        <input type="text" id="title" name="title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Opis</label>
+                        <textarea id="description" name="description" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="genre">Gatunek</label>
+                        <input type="text" id="genre" name="genre">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="director">Reżyser</label>
+                        <input type="text" id="director" name="director">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="durationMinutes">Czas trwania (minuty) *</label>
+                        <input type="number" id="durationMinutes" name="durationMinutes" min="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="releaseDate">Data premiery</label>
+                        <input type="date" id="releaseDate" name="releaseDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="year">Rok produkcji</label>
+                        <input type="number" id="year" name="year" min="1900" max="2100">
+                    </div>
+
+                    <!-- Upload okładki -->
+                    <div class="form-group">
+                        <label>Okładka filmu</label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <input type="file" id="posterFile" accept="image/*" style="display: none;">
+                            <div class="file-upload-content">
+                                <p>Przeciągnij plik tutaj lub kliknij, aby wybrać</p>
+                                <p class="file-upload-hint">PNG, JPG (max 5MB)</p>
+                            </div>
+                            <div class="file-preview" id="filePreview" style="display: none;">
+                                <img id="previewImage" src="" alt="Podgląd">
+                                <button type="button" id="removeFileBtn">Usuń</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Dodaj film</button>
+                        <button type="button" class="btn btn-secondary" id="cancelBtn" style="display: none;">Anuluj</button>
+                    </div>
+                </form>
+
+                <div id="message" class="message"></div>
+            </div>
+
+            <!-- Lista filmów do zarządzania -->
+            <div class="admin-movies-list">
+                <h3>Lista filmów</h3>
+                <div id="adminMoviesContainer">
+                    <p>Ładowanie filmów...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/admin-movies.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zarządzanie Seansami - Cinema Paradiso</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Cinema Paradiso - Panel Admina</h1>
+            <nav>
+                <a href="/index.html">Strona Główna</a>
+                <a href="/movies.html">Filmy</a>
+                <a href="/admin/movies.html">Zarządzanie Filmami</a>
+                <a href="/admin/rooms.html">Zarządzanie Salami</a>
+                <a href="/admin/screenings.html">Zarządzanie Seansami</a>
+                <button id="logoutBtn">Wyloguj</button>
+            </nav>
+        </header>
+
+        <main>
+            <h2>Zarządzanie Seansami</h2>
+            
+            <!-- Przyciski szybkich akcji -->
+            <div class="quick-actions" style="margin-bottom: 20px;">
+                <button class="btn btn-secondary" onclick="showScheduleModal()">Utwórz harmonogram</button>
+            </div>
+            
+            <!-- Formularz dodawania/edycji seansu -->
+            <div class="admin-form-container">
+                <h3 id="formTitle">Dodaj nowy seans</h3>
+                <form id="screeningForm">
+                    <input type="hidden" id="screeningId">
+                    
+                    <div class="form-group">
+                        <label for="movieId">Film *</label>
+                        <select id="movieId" name="movieId" required>
+                            <option value="">Wybierz film...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="roomId">Sala *</label>
+                        <select id="roomId" name="roomId" required>
+                            <option value="">Wybierz salę...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="startTime">Data i godzina rozpoczęcia *</label>
+                        <input type="datetime-local" id="startTime" name="startTime" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="basePrice">Cena bazowa (PLN) *</label>
+                        <input type="number" id="basePrice" name="basePrice" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="vipPrice">Cena VIP (PLN) - opcjonalne</label>
+                        <input type="number" id="vipPrice" name="vipPrice" step="0.01" min="0">
+                        <small>Jeśli puste, miejsca VIP kosztują tyle samo co standardowe</small>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Dodaj seans</button>
+                        <button type="button" class="btn btn-secondary" id="cancelBtn" style="display: none;">Anuluj</button>
+                    </div>
+                </form>
+
+                <div id="message" class="message"></div>
+            </div>
+
+            <!-- Lista seansów -->
+            <div class="admin-screenings-list">
+                <h3>Lista seansów</h3>
+                <div class="filter-bar" style="margin-bottom: 20px;">
+                    <label for="dateFilter">Filtruj po dacie:</label>
+                    <input type="date" id="dateFilter">
+                    <button class="btn btn-secondary" onclick="filterByDate()">Filtruj</button>
+                    <button class="btn btn-secondary" onclick="clearDateFilter()">Wyczyść</button>
+                </div>
+                <div id="adminScreeningsContainer">
+                    <p>Ładowanie seansów...</p>
+                </div>
+            </div>
+
+            <!-- Lista harmonogramów -->
+            <div class="admin-schedules-list" style="margin-top: 40px;">
+                <h3>Harmonogramy seansów</h3>
+                <div id="adminSchedulesContainer">
+                    <p>Ładowanie harmonogramów...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal do tworzenia harmonogramu -->
+    <div id="scheduleModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" id="closeScheduleModal">&times;</span>
+            <h3>Utwórz harmonogram seansów</h3>
+            <form id="scheduleForm">
+                <div class="form-group">
+                    <label for="scheduleMovieId">Film *</label>
+                    <select id="scheduleMovieId" name="scheduleMovieId" required>
+                        <option value="">Wybierz film...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="scheduleRoomId">Sala *</label>
+                    <select id="scheduleRoomId" name="scheduleRoomId" required>
+                        <option value="">Wybierz salę...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="dayOfWeek">Dzień tygodnia *</label>
+                    <select id="dayOfWeek" name="dayOfWeek" required>
+                        <option value="">Wybierz dzień...</option>
+                        <option value="MONDAY">Poniedziałek</option>
+                        <option value="TUESDAY">Wtorek</option>
+                        <option value="WEDNESDAY">Środa</option>
+                        <option value="THURSDAY">Czwartek</option>
+                        <option value="FRIDAY">Piątek</option>
+                        <option value="SATURDAY">Sobota</option>
+                        <option value="SUNDAY">Niedziela</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="scheduleStartTime">Godzina rozpoczęcia *</label>
+                    <input type="time" id="scheduleStartTime" name="scheduleStartTime" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="scheduleStartDate">Data rozpoczęcia *</label>
+                    <input type="date" id="scheduleStartDate" name="scheduleStartDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="scheduleEndDate">Data zakończenia *</label>
+                    <input type="date" id="scheduleEndDate" name="scheduleEndDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="scheduleBasePrice">Cena bazowa (PLN) *</label>
+                    <input type="number" id="scheduleBasePrice" name="scheduleBasePrice" step="0.01" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="scheduleVipPrice">Cena VIP (PLN) - opcjonalne</label>
+                    <input type="number" id="scheduleVipPrice" name="scheduleVipPrice" step="0.01" min="0">
+                </div>
+
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-primary">Utwórz harmonogram</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()">Anuluj</button>
+                </div>
+            </form>
+            <div id="scheduleMessage" class="message"></div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/admin-screenings.js"></script>
+</body>
+</html>
+
