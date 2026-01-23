@@ -294,10 +294,13 @@ public class ScreeningService {
     /**
      * Pobiera repertuar dla konkretnej daty
      * Zwraca listę filmów z ich seansami w danym dniu
+     * Filtruje seanse które jeszcze się nie zakończyły (startTime + durationMinutes > teraz)
      */
     @Transactional(readOnly = true)
     public List<RepertoireDTO> getRepertoireByDate(LocalDate date) {
         log.info("Pobieranie repertuaru dla daty: {}", date);
+        
+        LocalDateTime now = LocalDateTime.now();
         
         // Konwertuj LocalDate na LocalDateTime (początek i koniec dnia)
         LocalDateTime startOfDay = date.atStartOfDay();
@@ -305,6 +308,16 @@ public class ScreeningService {
         
         // Pobierz wszystkie seanse dla tego dnia (używamy Pageable.unpaged() aby pobrać wszystkie)
         List<Screening> screenings = screeningRepository.findByStartTimeBetween(startOfDay, endOfDay, Pageable.unpaged()).getContent();
+        
+        // Filtruj seanse które jeszcze się nie zakończyły
+        // Seans się kończy: startTime + durationMinutes
+        screenings = screenings.stream()
+                .filter(s -> {
+                    LocalDateTime screeningEndTime = s.getStartTime()
+                            .plusMinutes(s.getMovie().getDurationMinutes());
+                    return screeningEndTime.isAfter(now); // Seans jeszcze trwa lub się nie zaczął
+                })
+                .collect(Collectors.toList());
         
         // Pogrupuj seanse po filmach
         Map<Long, List<Screening>> screeningsByMovie = screenings.stream()

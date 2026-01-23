@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Cinema Paradiso</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="p-3 text-bg-dark">
+        <div class="container">
+            <div class="header-content">
+                <a href="/index.html" class="logo-section">
+                    <div class="logo-icon">
+                        <i class="bi bi-film"></i>
+                    </div>
+                    <span class="logo-text">Cinema Paradiso - Panel Admina</span>
+                </a>
+                
+                <ul class="nav-links">
+                    <li><a href="/index.html" class="nav-link">Strona Główna</a></li>
+                    <li><a href="/movies.html" class="nav-link">Filmy</a></li>
+                    <li><a href="/repertuar.html" class="nav-link">Repertuar</a></li>
+                </ul>
+                
+                <div class="header-actions">
+                    <a href="/login.html" id="loginLink" class="btn-header btn-outline-light-custom" style="display: none;">Zaloguj się</a>
+                    <a href="/register.html" id="registerLink" class="btn-header btn-warning-custom" style="display: none;">Zarejestruj się</a>
+                    <a href="/profile.html" id="profileLink" class="btn-header btn-outline-light-custom" style="display: none;">Mój Profil</a>
+                    
+                    <!-- Dropdown menu dla admina -->
+                    <div class="admin-dropdown" id="adminDropdown" style="display: none;">
+                        <button id="adminDropdownToggle" class="btn-header btn-outline-light-custom admin-dropdown-toggle">
+                            <i class="bi bi-gear"></i> Panel Admina
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="admin-dropdown-menu" id="adminDropdownMenu">
+                            <a href="/admin/dashboard.html">
+                                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                            </a>
+                            <a href="/admin/movies.html">
+                                <i class="bi bi-film me-2"></i> Zarządzanie Filmami
+                            </a>
+                            <a href="/admin/rooms.html">
+                                <i class="bi bi-door-open me-2"></i> Zarządzanie Salami
+                            </a>
+                            <a href="/admin/screenings.html">
+                                <i class="bi bi-calendar-event me-2"></i> Zarządzanie Seansami
+                            </a>
+                            <a href="/admin/audit-logs.html">
+                                <i class="bi bi-clock-history me-2"></i> Logi Audytowe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <button id="logoutBtn" class="btn-header" style="display: none;">Wyloguj</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <button class="mobile-sidebar-toggle" id="mobileSidebarToggle">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <div class="dashboard-container">
+        <aside class="dashboard-sidebar" id="dashboardSidebar">
+            <div class="dashboard-sidebar-header">
+                <h5>
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Panel Admina</span>
+                    <button class="dashboard-sidebar-toggle" id="sidebarToggle" title="Zwiń/Rozwiń">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                </h5>
+            </div>
+            <nav>
+                <ul class="dashboard-sidebar-nav">
+                    <li>
+                        <a href="/admin/dashboard.html" class="active">
+                            <i class="bi bi-speedometer2"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/movies.html">
+                            <i class="bi bi-film"></i>
+                            <span>Zarządzanie Filmami</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/rooms.html">
+                            <i class="bi bi-door-open"></i>
+                            <span>Zarządzanie Salami</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/screenings.html">
+                            <i class="bi bi-calendar-event"></i>
+                            <span>Zarządzanie Seansami</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/audit-logs.html">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Logi Audytowe</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="dashboard-main">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Dashboard</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshBtn">
+                            <i class="bi bi-arrow-clockwise"></i> Odśwież
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Karty ze statystykami -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Całkowity Zysk
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalRevenue">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-currency-dollar fs-1 text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Opłacone Rezerwacje
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="paidReservations">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-check-circle fs-1 text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Wszystkie Rezerwacje
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalReservations">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-ticket-perforated fs-1 text-info"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Zarezerwowane Miejsca
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalReservedSeats">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-person-seat fs-1 text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wykresy -->
+            <div class="row mb-4">
+                <div class="col-xl-8 col-lg-7">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Zyski z ostatnich 7 dni</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-area">
+                                <canvas id="dailyRevenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4 col-lg-5">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Zyski według metody płatności</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-pie pt-4 pb-2">
+                                <canvas id="paymentMethodChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-xl-8 col-lg-7">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Zyski z ostatnich 12 miesięcy</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-area">
+                                <canvas id="monthlyRevenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4 col-lg-5">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Rezerwacje z ostatnich 7 dni</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-area">
+                                <canvas id="dailyReservationsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- API Client -->
+    <script src="/js/api.js"></script>
+    <!-- Admin Dashboard JS -->
+    <script src="/js/admin-dashboard.js"></script>
+    <!-- Dashboard Statistics JS -->
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
+
