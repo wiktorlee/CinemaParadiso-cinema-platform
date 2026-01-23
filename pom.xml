@@ -115,6 +115,15 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <configuration>
+                    <url>jdbc:postgresql://localhost:5432/cinema_paradiso?characterEncoding=UTF-8&amp;useUnicode=true</url>
+                    <user>admin</user>
+                    <password>admin123</password>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
