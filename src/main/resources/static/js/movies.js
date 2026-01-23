@@ -112,7 +112,7 @@ async function loadMovies() {
     const clearSearchBtn = document.getElementById('clearSearchBtn');
     
     // Pokaż loader podczas ładowania
-    container.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Ładowanie...</span></div><p class="mt-2 text-muted">Ładowanie filmów...</p></div>';
+    loaderService.showInline('moviesContainer', 'Ładowanie filmów...');
     
     try {
         // Buduj URL z parametrami
@@ -418,7 +418,7 @@ window.showMovieDetails = async function(movieId) {
         
     } catch (error) {
         console.error('Error loading movie details:', error);
-        alert('Wystąpił błąd podczas ładowania szczegółów filmu.');
+        notificationService.showError('Wystąpił błąd podczas ładowania szczegółów filmu.');
     }
 }
 
@@ -532,7 +532,12 @@ window.showRatingModal = async function(movieId, currentRating = null) {
     try {
         await getCurrentUser();
     } catch (error) {
-        alert('Musisz być zalogowany, aby ocenić film.');
+        modalService.alert(
+            'Wymagane logowanie',
+            'Musisz być zalogowany, aby ocenić film.',
+            null,
+            { type: 'info' }
+        );
         return;
     }
     
@@ -623,14 +628,19 @@ window.submitRating = async function(movieId, rating) {
         }
         
         // Pokaż komunikat sukcesu
-        alert('Dziękujemy za ocenę!');
+        notificationService.showSuccess('Dziękujemy za ocenę!');
         
     } catch (error) {
         console.error('Error submitting rating:', error);
         if (error.message && error.message.includes('UNAUTHORIZED')) {
-            alert('Musisz być zalogowany, aby ocenić film.');
+            modalService.alert(
+                'Wymagane logowanie',
+                'Musisz być zalogowany, aby ocenić film.',
+                null,
+                { type: 'info' }
+            );
         } else {
-            alert('Wystąpił błąd podczas zapisywania oceny.');
+            notificationService.showError('Wystąpił błąd podczas zapisywania oceny.');
         }
     }
 };
@@ -643,7 +653,12 @@ window.showReviewForm = async function(movieId) {
     try {
         await getCurrentUser();
     } catch (error) {
-        alert('Musisz być zalogowany, aby napisać recenzję.');
+        modalService.alert(
+            'Wymagane logowanie',
+            'Musisz być zalogowany, aby napisać recenzję.',
+            null,
+            { type: 'info' }
+        );
         return;
     }
     
@@ -687,7 +702,7 @@ window.submitReview = async function(event, movieId) {
     const content = document.getElementById('review-content').value.trim();
     
     if (content.length < 10) {
-        alert('Recenzja musi mieć co najmniej 10 znaków.');
+        notificationService.showWarning('Recenzja musi mieć co najmniej 10 znaków.');
         return;
     }
     
@@ -703,14 +718,19 @@ window.submitReview = async function(event, movieId) {
         // Odśwież listę recenzji
         loadReviews(movieId);
         
-        alert('Recenzja została opublikowana!');
+        notificationService.showSuccess('Recenzja została opublikowana!');
         
     } catch (error) {
         console.error('Error submitting review:', error);
         if (error.message && error.message.includes('UNAUTHORIZED')) {
-            alert('Musisz być zalogowany, aby napisać recenzję.');
+            modalService.alert(
+                'Wymagane logowanie',
+                'Musisz być zalogowany, aby napisać recenzję.',
+                null,
+                { type: 'info' }
+            );
         } else {
-            alert('Wystąpił błąd podczas publikowania recenzji.');
+            notificationService.showError('Wystąpił błąd podczas publikowania recenzji.');
         }
     }
 };
@@ -796,23 +816,31 @@ async function loadReviews(movieId, page = 0) {
  * Usuwa recenzję
  */
 window.deleteReview = async function(reviewId, movieId) {
-    if (!confirm('Czy na pewno chcesz usunąć tę recenzję?')) {
-        return;
-    }
-    
-    try {
-        await apiRequest(`/reviews/${reviewId}`, {
-            method: 'DELETE'
-        });
-        
-        // Odśwież listę recenzji
-        loadReviews(movieId);
-        alert('Recenzja została usunięta.');
-        
-    } catch (error) {
-        console.error('Error deleting review:', error);
-        alert('Wystąpił błąd podczas usuwania recenzji.');
-    }
+    modalService.confirm(
+        'Usuwanie recenzji',
+        'Czy na pewno chcesz usunąć tę recenzję? Ta operacja jest nieodwracalna.',
+        async () => {
+            try {
+                await apiRequest(`/reviews/${reviewId}`, {
+                    method: 'DELETE'
+                });
+                
+                // Odśwież listę recenzji
+                loadReviews(movieId);
+                notificationService.showSuccess('Recenzja została usunięta.');
+                
+            } catch (error) {
+                console.error('Error deleting review:', error);
+                notificationService.showError('Wystąpił błąd podczas usuwania recenzji.');
+            }
+        },
+        null,
+        {
+            confirmText: 'Usuń',
+            cancelText: 'Anuluj',
+            type: 'danger'
+        }
+    );
 };
 
 /**

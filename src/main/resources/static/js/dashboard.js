@@ -391,8 +391,7 @@ function formatPaymentMethod(method) {
  * Wyświetla błąd
  */
 function showError(message) {
-    // Można dodać toast notification lub alert
     console.error(message);
-    alert(message);
+    notificationService.showError(message);
 }
 

@@ -34,6 +34,20 @@ public interface ReservationSeatRepository extends JpaRepository<ReservationSeat
            "AND rs.reservation.screening.id = :screeningId " +
            "AND rs.reservation.status IN ('PAID', 'PENDING_PAYMENT')")
     boolean isSeatReservedForScreening(@Param("seatId") Long seatId, @Param("screeningId") Long screeningId);
+    
+    /**
+     * Sprawdza czy miejsce jest zarezerwowane przez INNĄ rezerwację (nie podaną)
+     * Używane do weryfikacji przed finalizacją płatności
+     * Uwzględnia rezerwacje: PAID (opłacone) i PENDING_PAYMENT (oczekujące na płatność)
+     */
+    @Query("SELECT COUNT(rs) > 0 FROM ReservationSeat rs " +
+           "WHERE rs.seat.id = :seatId " +
+           "AND rs.reservation.screening.id = :screeningId " +
+           "AND rs.reservation.id != :excludeReservationId " +
+           "AND rs.reservation.status IN ('PAID', 'PENDING_PAYMENT')")
+    boolean isSeatReservedByOtherReservation(@Param("seatId") Long seatId, 
+                                             @Param("screeningId") Long screeningId,
+                                             @Param("excludeReservationId") Long excludeReservationId);
 }
 
 

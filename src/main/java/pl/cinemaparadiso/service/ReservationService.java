@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.cinemaparadiso.dto.*;
 import pl.cinemaparadiso.entity.*;
 import pl.cinemaparadiso.enums.ReservationStatus;
-import pl.cinemaparadiso.enums.TicketType;
 import pl.cinemaparadiso.exception.*;
 import pl.cinemaparadiso.repository.*;
 
@@ -168,6 +167,48 @@ public class ReservationService {
         }
         
         return toDTO(reservation);
+    }
+    
+    /**
+     * Weryfikuje dostępność wszystkich miejsc w rezerwacji
+     * Sprawdza czy miejsca nadal istnieją, są dostępne i nie zostały zajęte przez inną rezerwację
+     * 
+     * @param reservation - rezerwacja do weryfikacji
+     * @throws SeatNotAvailableException jeśli któreś miejsce jest niedostępne
+     */
+    public void verifySeatsAvailability(Reservation reservation) {
+        log.debug("Weryfikacja dostępności miejsc dla rezerwacji ID: {}", reservation.getId());
+        
+        Long screeningId = reservation.getScreening().getId();
+        
+        for (ReservationSeat reservationSeat : reservation.getReservationSeats()) {
+            Long seatId = reservationSeat.getSeat().getId();
+            
+            // Sprawdź czy miejsce nadal istnieje
+            Seat seat = seatRepository.findById(seatId)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Miejsce o ID " + seatId + " nie istnieje (może zostało usunięte)"));
+            
+            // Sprawdź czy miejsce jest włączone (nie uszkodzone)
+            if (!seat.getIsAvailable()) {
+                throw new SeatNotAvailableException(
+                        "Miejsce rząd " + seat.getRowNumber() + ", miejsce " + seat.getSeatNumber() + 
+                        " jest niedostępne (zablokowane)");
+            }
+            
+            // Sprawdź czy miejsce nie jest już zarezerwowane przez INNĄ rezerwację
+            // (pomijamy obecną rezerwację - może być w statusie PENDING_PAYMENT)
+            boolean isReservedByOther = reservationSeatRepository.isSeatReservedByOtherReservation(
+                    seatId, screeningId, reservation.getId());
+            
+            if (isReservedByOther) {
+                throw new SeatNotAvailableException(
+                        "Miejsce rząd " + seat.getRowNumber() + ", miejsce " + seat.getSeatNumber() + 
+                        " zostało zajęte przez inną rezerwację");
+            }
+        }
+        
+        log.debug("Weryfikacja dostępności miejsc zakończona pomyślnie dla rezerwacji ID: {}", reservation.getId());
     }
     
     /**

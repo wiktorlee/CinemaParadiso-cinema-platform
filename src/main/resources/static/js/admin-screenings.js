@@ -96,8 +96,12 @@ async function loadMoviesAndRooms() {
  */
 async function loadAdminScreenings(dateFilter = null) {
     const container = document.getElementById('adminScreeningsContainer');
+    if (!container) return;
     
     try {
+        // Pokaż loader podczas ładowania seansów
+        loaderService.showInline('adminScreeningsContainer', 'Ładowanie seansów...');
+        
         let screenings;
         
         if (dateFilter) {
@@ -173,8 +177,11 @@ async function loadAdminScreenings(dateFilter = null) {
  */
 async function loadAdminSchedules() {
     const container = document.getElementById('adminSchedulesContainer');
+    if (!container) return;
     
     try {
+        // Pokaż loader podczas ładowania harmonogramów
+        loaderService.showInline('adminSchedulesContainer', 'Ładowanie harmonogramów...');
         const schedules = await getAllSchedules();
         
         if (schedules.length === 0) {
@@ -335,7 +342,7 @@ async function editScreening(screeningId) {
         
     } catch (error) {
         console.error('Error loading screening:', error);
-        alert('Błąd podczas ładowania seansu.');
+        notificationService.showError('Błąd podczas ładowania seansu.');
     }
 }
 
@@ -343,22 +350,30 @@ async function editScreening(screeningId) {
  * Potwierdza usunięcie seansu
  */
 async function deleteScreeningConfirm(screeningId, movieTitle) {
-    if (!confirm(`Czy na pewno chcesz usunąć seans filmu "${movieTitle}"?\n\nUWAGA: Nie można usunąć seansu który ma rezerwacje!`)) {
-        return;
-    }
-    
-    try {
-        await deleteScreening(screeningId);
-        await loadAdminScreenings();
-        alert('Seans został usunięty.');
-    } catch (error) {
-        console.error('Error deleting screening:', error);
-        let errorMessage = 'Błąd podczas usuwania seansu.';
-        if (error.message.includes('rezerwacje')) {
-            errorMessage = 'Nie można usunąć seansu który ma rezerwacje!';
+    modalService.confirm(
+        'Usuwanie seansu',
+        `Czy na pewno chcesz usunąć seans filmu "${movieTitle}"?\n\nUWAGA: Nie można usunąć seansu który ma rezerwacje!`,
+        async () => {
+            try {
+                await deleteScreening(screeningId);
+                await loadAdminScreenings();
+                notificationService.showSuccess('Seans został usunięty.');
+            } catch (error) {
+                console.error('Error deleting screening:', error);
+                let errorMessage = 'Błąd podczas usuwania seansu.';
+                if (error.message.includes('rezerwacje')) {
+                    errorMessage = 'Nie można usunąć seansu który ma rezerwacje!';
+                }
+                notificationService.showError(errorMessage);
+            }
+        },
+        null,
+        {
+            confirmText: 'Usuń',
+            cancelText: 'Anuluj',
+            type: 'danger'
         }
-        alert(errorMessage);
-    }
+    );
 }
 
 /**
@@ -449,19 +464,27 @@ async function handleScheduleFormSubmit(e) {
  * Generuje seanse z harmonogramu
  */
 async function generateScreeningsFromSchedule(scheduleId) {
-    if (!confirm('Czy na pewno chcesz wygenerować seanse z tego harmonogramu?\n\nSystem utworzy seanse dla wszystkich pasujących dat.')) {
-        return;
-    }
-    
-    try {
-        const screenings = await generateScreeningsFromScheduleAPI(scheduleId);
-        alert(`Wygenerowano ${screenings.length} seansów!`);
-        await loadAdminScreenings();
-        await loadAdminSchedules();
-    } catch (error) {
-        console.error('Error generating screenings:', error);
-        alert('Błąd podczas generowania seansów.');
-    }
+    modalService.confirm(
+        'Generowanie seansów',
+        'Czy na pewno chcesz wygenerować seanse z tego harmonogramu?\n\nSystem utworzy seanse dla wszystkich pasujących dat.',
+        async () => {
+            try {
+                const screenings = await generateScreeningsFromScheduleAPI(scheduleId);
+                notificationService.showSuccess(`Wygenerowano ${screenings.length} seansów!`);
+                await loadAdminScreenings();
+                await loadAdminSchedules();
+            } catch (error) {
+                console.error('Error generating screenings:', error);
+                notificationService.showError('Błąd podczas generowania seansów.');
+            }
+        },
+        null,
+        {
+            confirmText: 'Generuj',
+            cancelText: 'Anuluj',
+            type: 'info'
+        }
+    );
 }
 
 // Funkcja pomocnicza do wywołania API (nie koliduje z funkcją powyżej)
@@ -494,7 +517,7 @@ async function editSchedule(scheduleId) {
         
     } catch (error) {
         console.error('Error loading schedule:', error);
-        alert('Błąd podczas ładowania harmonogramu.');
+        notificationService.showError('Błąd podczas ładowania harmonogramu.');
     }
 }
 
@@ -502,17 +525,25 @@ async function editSchedule(scheduleId) {
  * Potwierdza usunięcie harmonogramu
  */
 async function deleteScheduleConfirm(scheduleId) {
-    if (!confirm('Czy na pewno chcesz usunąć ten harmonogram?\n\nUWAGA: Wygenerowane seanse nie zostaną usunięte!')) {
-        return;
-    }
-    
-    try {
-        await deleteSchedule(scheduleId);
-        await loadAdminSchedules();
-        alert('Harmonogram został usunięty.');
-    } catch (error) {
-        console.error('Error deleting schedule:', error);
-        alert('Błąd podczas usuwania harmonogramu.');
-    }
+    modalService.confirm(
+        'Usuwanie harmonogramu',
+        'Czy na pewno chcesz usunąć ten harmonogram?\n\nUWAGA: Wygenerowane seanse nie zostaną usunięte!',
+        async () => {
+            try {
+                await deleteSchedule(scheduleId);
+                await loadAdminSchedules();
+                notificationService.showSuccess('Harmonogram został usunięty.');
+            } catch (error) {
+                console.error('Error deleting schedule:', error);
+                notificationService.showError('Błąd podczas usuwania harmonogramu.');
+            }
+        },
+        null,
+        {
+            confirmText: 'Usuń',
+            cancelText: 'Anuluj',
+            type: 'warning'
+        }
+    );
 }
 

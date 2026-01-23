@@ -1698,6 +1698,55 @@ textarea:focus {
     opacity: 0.6;
 }
 
+/* Style dla miejsc w rezerwacji */
+.seat.available {
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+}
+
+.seat.available:hover {
+    background-color: #45a049;
+}
+
+.seat.vip {
+    background-color: #FFD700;
+    color: #333;
+    border-color: #FFA500;
+    cursor: pointer;
+}
+
+.seat.vip:hover {
+    background-color: #ffcc00;
+}
+
+.seat.selected {
+    background-color: #8B4513;
+    color: white;
+    border-color: #654321;
+    cursor: pointer;
+}
+
+.seat.selected:hover {
+    background-color: #7a3d11;
+}
+
+.seat.reserved {
+    background-color: #808080;
+    color: white;
+    border-color: #666666;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.seat.disabled {
+    background-color: #d3d3d3;
+    color: #666;
+    border-color: #a9a9a9;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 .seat-empty {
     background-color: transparent;
     border: none;
@@ -1733,6 +1782,33 @@ textarea:focus {
 .legend-seat.seat-vip {
     background-color: #FFD700;
     border-color: #FFA500;
+}
+
+/* Style dla legendy miejsc w rezerwacji */
+.legend-seat.available {
+    background-color: #4CAF50;
+    border-color: #45a049;
+}
+
+.legend-seat.vip {
+    background-color: #FFD700;
+    border-color: #FFA500;
+}
+
+.legend-seat.selected {
+    background-color: #8B4513;
+    border-color: #654321;
+}
+
+.legend-seat.reserved {
+    background-color: #808080;
+    border-color: #666666;
+}
+
+.legend-seat.disabled {
+    background-color: #d3d3d3;
+    border-color: #a9a9a9;
+    opacity: 0.6;
 }
 
 /* Responsive for room visualization */
@@ -2132,6 +2208,606 @@ textarea:focus {
     .chart-area,
     .chart-pie {
         height: 200px;
+    }
+}
+
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.toast-notification {
+    min-width: 300px;
+    max-width: 450px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transform: translateX(400px);
+    transition: all 0.3s ease-in-out;
+    pointer-events: auto;
+    overflow: hidden;
+}
+
+.toast-notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-notification.hide {
+    opacity: 0;
+    transform: translateX(400px);
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    gap: 12px;
+}
+
+.toast-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.toast-message {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: color 0.2s;
+}
+
+.toast-close:hover {
+    color: #333;
+}
+
+/* Typy toast */
+.toast-success {
+    border-left: 4px solid var(--success);
+}
+
+.toast-success .toast-icon {
+    color: var(--success);
+}
+
+.toast-error {
+    border-left: 4px solid var(--danger);
+}
+
+.toast-error .toast-icon {
+    color: var(--danger);
+}
+
+.toast-warning {
+    border-left: 4px solid #ffc107;
+}
+
+.toast-warning .toast-icon {
+    color: #ffc107;
+}
+
+.toast-info {
+    border-left: 4px solid #17a2b8;
+}
+
+.toast-info .toast-icon {
+    color: #17a2b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .toast-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+    }
+
+    .toast-notification {
+        min-width: auto;
+        max-width: 100%;
+    }
+}
+
+/* ============================================
+   CUSTOM MODAL DIALOGS
+   ============================================ */
+
+#modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    pointer-events: none;
+}
+
+.custom-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    pointer-events: auto;
+}
+
+.modal-backdrop.show {
+    opacity: 1;
+}
+
+.modal-dialog {
+    position: relative;
+    width: 90%;
+    max-width: 500px;
+    z-index: 10001;
+    pointer-events: auto;
+    transform: scale(0.9) translateY(-20px);
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
+}
+
+.custom-modal.show .modal-dialog {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.modal-header {
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modal-header.modal-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-bottom-color: #b1dfbb;
+}
+
+.modal-header.modal-error {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border-bottom-color: #f1b0b7;
+}
+
+.modal-header.modal-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-bottom-color: #ffd93d;
+}
+
+.modal-header.modal-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    border-bottom-color: #abdde5;
+}
+
+.modal-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.modal-header.modal-success .modal-icon {
+    color: var(--success);
+}
+
+.modal-header.modal-error .modal-icon {
+    color: var(--danger);
+}
+
+.modal-header.modal-warning .modal-icon {
+    color: #ffc107;
+}
+
+.modal-header.modal-info .modal-icon {
+    color: #17a2b8;
+}
+
+.modal-title {
+    flex: 1;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-message {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #555;
+}
+
+.modal-details {
+    margin-top: 16px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.detail-item {
+    margin-bottom: 8px;
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-item strong {
+    color: #333;
+    margin-right: 8px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background: #f8f9fa;
+}
+
+.modal-footer .btn {
+    min-width: 100px;
+    padding: 10px 20px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-dialog {
+        width: 95%;
+        max-width: none;
+        margin: 20px;
+    }
+
+    .modal-header {
+        padding: 16px 20px;
+    }
+
+    .modal-title {
+        font-size: 18px;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-footer {
+        padding: 12px 20px;
+        flex-direction: column;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
+}
+
+/* ============================================
+   FILM REEL LOADER - Animowana rolka filmowa
+   ============================================ */
+
+/* Animacja obrotu rolki filmowej */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Animacja obrotu z pulsowaniem */
+@keyframes spin-pulse {
+    0% {
+        transform: rotate(0deg) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: rotate(180deg) scale(1.1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Klasa dla animowanej ikony rolki filmowej */
+.film-reel-spinner {
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+.film-reel-spinner-pulse {
+    animation: spin-pulse 1.5s ease-in-out infinite;
+    display: inline-block;
+}
+
+/* Pełnoekranowy loader overlay */
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    display: none; /* Domyślnie ukryty */
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.loader-overlay.show {
+    display: flex;
+}
+
+.loader-overlay .film-reel-spinner {
+    font-size: 64px;
+    color: var(--accent); /* Złoty kolor z palety */
+    filter: drop-shadow(0 0 10px rgba(229, 186, 65, 0.5));
+}
+
+.loader-overlay .loader-text {
+    color: white;
+    font-size: 20px;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Inline loader (w miejscu elementu) */
+.inline-loader {
+    display: none; /* Domyślnie ukryty */
+    align-items: center;
+    gap: 10px;
+}
+
+.inline-loader.show {
+    display: inline-flex;
+}
+
+.inline-loader .film-reel-spinner {
+    font-size: 18px;
+    color: var(--accent);
+}
+
+/* Loader w przycisku */
+.btn-loader {
+    display: none;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-loader.show {
+    display: inline-flex;
+}
+
+.btn-loader .film-reel-spinner {
+    font-size: 16px;
+}
+
+/* Mały loader (tylko ikona) */
+.small-loader {
+    display: inline-block;
+}
+
+.small-loader .film-reel-spinner {
+    font-size: 20px;
+    color: var(--accent);
+}
+
+/* Loader w kontenerze (zastępuje zawartość) */
+.container-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 20px;
+    min-height: 200px;
+}
+
+.container-loader .film-reel-spinner {
+    font-size: 48px;
+    color: var(--accent);
+}
+
+.container-loader .loader-text {
+    color: #666;
+    font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .loader-overlay .film-reel-spinner {
+        font-size: 48px;
+    }
+    
+    .loader-overlay .loader-text {
+        font-size: 18px;
+    }
+    
+    .container-loader .film-reel-spinner {
+        font-size: 36px;
+    }
+}
+
+/* ============================================
+   TICKET / QR CODE STYLES
+   ============================================ */
+
+.ticket-modal {
+    display: flex;
+    position: fixed;
+    z-index: 1050;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.ticket-modal-dialog {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    z-index: 1051;
+    margin: auto;
+}
+
+.ticket-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    animation: fadeIn 0.3s;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.ticket-modal-content {
+    background-color: white;
+    border-radius: 15px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideUp 0.3s;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.ticket-content {
+    padding: 20px;
+}
+
+.ticket-info {
+    border-bottom: 2px dashed #dee2e6;
+    padding-bottom: 20px;
+}
+
+.ticket-info h3 {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.qr-code-container {
+    padding: 20px 0;
+}
+
+.qr-code-wrapper {
+    display: inline-block;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 2px solid #e9ecef;
+}
+
+.qr-code-wrapper img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.ticket-footer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .qr-code-wrapper {
+        padding: 15px;
+    }
+    
+    .qr-code-wrapper img {
+        max-width: 250px;
     }
 }
 

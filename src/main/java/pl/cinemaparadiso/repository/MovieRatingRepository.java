@@ -42,3 +42,4 @@ public interface MovieRatingRepository extends JpaRepository<MovieRating, Long> 
     long count();
 }
 
+

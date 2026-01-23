@@ -24,3 +24,4 @@ public class MovieRatingDTO {
     private LocalDateTime updatedAt;
 }
 
+

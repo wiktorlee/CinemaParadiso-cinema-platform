@@ -92,13 +92,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 function handleFileSelect(file) {
     // Walidacja typu pliku
     if (!file.type.startsWith('image/')) {
-        alert('Wybierz plik obrazu (PNG, JPG, etc.)');
+        notificationService.showWarning('Wybierz plik obrazu (PNG, JPG, etc.)');
         return;
     }
     
     // Walidacja rozmiaru (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-        alert('Plik jest za duży. Maksymalny rozmiar: 5MB');
+        notificationService.showError('Plik jest za duży. Maksymalny rozmiar: 5MB');
         return;
     }
     
@@ -239,7 +239,7 @@ async function editMovie(id) {
         
     } catch (error) {
         console.error('Error loading movie:', error);
-        alert('Wystąpił błąd podczas ładowania filmu.');
+        notificationService.showError('Wystąpił błąd podczas ładowania filmu.');
     }
 }
 
@@ -247,18 +247,26 @@ async function editMovie(id) {
  * Usuwa film
  */
 async function deleteMovieHandler(id) {
-    if (!confirm('Czy na pewno chcesz usunąć ten film?')) {
-        return;
-    }
-    
-    try {
-        await deleteMovie(id);
-        await loadAdminMovies();
-        alert('Film został usunięty.');
-    } catch (error) {
-        console.error('Error deleting movie:', error);
-        alert('Wystąpił błąd podczas usuwania filmu.');
-    }
+    modalService.confirm(
+        'Usuwanie filmu',
+        'Czy na pewno chcesz usunąć ten film? Ta operacja jest nieodwracalna.',
+        async () => {
+            try {
+                await deleteMovie(id);
+                await loadAdminMovies();
+                notificationService.showSuccess('Film został usunięty.');
+            } catch (error) {
+                console.error('Error deleting movie:', error);
+                notificationService.showError('Wystąpił błąd podczas usuwania filmu.');
+            }
+        },
+        null,
+        {
+            confirmText: 'Usuń',
+            cancelText: 'Anuluj',
+            type: 'danger'
+        }
+    );
 }
 
 /**
@@ -266,8 +274,11 @@ async function deleteMovieHandler(id) {
  */
 async function loadAdminMovies() {
     const container = document.getElementById('adminMoviesContainer');
+    if (!container) return;
     
     try {
+        // Pokaż loader podczas ładowania filmów
+        loaderService.showInline('adminMoviesContainer', 'Ładowanie filmów...');
         const movies = await getAllMovies();
         
         if (movies.length === 0) {

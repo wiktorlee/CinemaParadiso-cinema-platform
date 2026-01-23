@@ -67,8 +67,11 @@ async function checkAuth() {
  */
 async function loadAdminRooms() {
     const container = document.getElementById('adminRoomsContainer');
+    if (!container) return;
     
     try {
+        // Pokaż loader podczas ładowania sal
+        loaderService.showInline('adminRoomsContainer', 'Ładowanie sal...');
         const rooms = await getAllRooms();
         
         if (rooms.length === 0) {
@@ -214,7 +217,7 @@ async function editRoom(roomId) {
         
     } catch (error) {
         console.error('Error loading room:', error);
-        alert('Błąd podczas ładowania sali.');
+        notificationService.showError('Błąd podczas ładowania sali.');
     }
 }
 
@@ -222,18 +225,26 @@ async function editRoom(roomId) {
  * Potwierdza usunięcie sali
  */
 async function deleteRoomConfirm(roomId, roomNumber) {
-    if (!confirm(`Czy na pewno chcesz usunąć salę "${roomNumber}"?\n\nUWAGA: Ta operacja jest nieodwracalna!`)) {
-        return;
-    }
-    
-    try {
-        await deleteRoom(roomId);
-        await loadAdminRooms();
-        alert('Sala została usunięta.');
-    } catch (error) {
-        console.error('Error deleting room:', error);
-        alert('Błąd podczas usuwania sali.');
-    }
+    modalService.confirm(
+        'Usuwanie sali',
+        `Czy na pewno chcesz usunąć salę "${roomNumber}"?\n\nUWAGA: Ta operacja jest nieodwracalna!`,
+        async () => {
+            try {
+                await deleteRoom(roomId);
+                await loadAdminRooms();
+                notificationService.showSuccess('Sala została usunięta.');
+            } catch (error) {
+                console.error('Error deleting room:', error);
+                notificationService.showError('Błąd podczas usuwania sali.');
+            }
+        },
+        null,
+        {
+            confirmText: 'Usuń',
+            cancelText: 'Anuluj',
+            type: 'danger'
+        }
+    );
 }
 
 /**
@@ -326,14 +337,14 @@ async function duplicateRoomPrompt(roomId, currentRoomNumber) {
     try {
         const newRoom = await duplicateRoom(roomId, newRoomNumber.trim());
         await loadAdminRooms();
-        alert(`Sala "${newRoom.roomNumber}" została utworzona!`);
+        notificationService.showSuccess(`Sala "${newRoom.roomNumber}" została utworzona!`);
     } catch (error) {
         console.error('Error duplicating room:', error);
         let errorMessage = 'Błąd podczas duplikowania sali.';
         if (error.message.includes('already exists')) {
             errorMessage = 'Sala o takim numerze już istnieje.';
         }
-        alert(errorMessage);
+        notificationService.showError(errorMessage);
     }
 }
 

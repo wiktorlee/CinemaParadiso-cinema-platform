@@ -10,7 +10,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
         if (user.role !== 'ADMIN') {
-            alert('Brak uprawnień do przeglądania logów audytowych');
+            modalService.alert(
+                'Brak uprawnień',
+                'Brak uprawnień do przeglądania logów audytowych',
+                () => {
+                    window.location.href = '/index.html';
+                },
+                { type: 'warning' }
+            );
             window.location.href = '/index.html';
             return;
         }
@@ -29,8 +36,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadAuditLogs() {
     const container = document.getElementById('logsContainer');
     const paginationContainer = document.getElementById('paginationContainer');
+    if (!container) return;
     
     try {
+        // Pokaż loader podczas ładowania logów
+        loaderService.showInline('logsContainer', 'Ładowanie logów audytu...');
         const response = await apiRequest(`/admin/audit/logs?page=${currentPage}&size=${pageSize}`, {
             method: 'GET'
         });

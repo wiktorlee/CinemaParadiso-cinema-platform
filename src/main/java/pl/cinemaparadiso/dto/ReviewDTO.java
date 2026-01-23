@@ -27,3 +27,4 @@ public class ReviewDTO {
     private Boolean isOwnReview; // true jeśli to recenzja zalogowanego użytkownika
 }
 
+

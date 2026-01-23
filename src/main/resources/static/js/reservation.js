@@ -13,7 +13,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         // Użytkownik nie jest zalogowany - przekieruj do logowania
         console.error('User not logged in:', error);
-        alert('Musisz być zalogowany, aby zarezerwować miejsca.');
+        modalService.alert(
+            'Wymagane logowanie',
+            'Musisz być zalogowany, aby zarezerwować miejsca.',
+            null,
+            { type: 'info' }
+        );
         window.location.href = '/login.html';
         return;
     }
@@ -37,6 +42,9 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function loadScreeningData(screeningId) {
     try {
+        // Pokaż loader podczas ładowania danych seansu
+        loaderService.showFullScreen('Ładowanie danych seansu...');
+        
         screeningData = await apiRequest(`/screenings/${screeningId}`, { method: 'GET' });
         
         const screeningInfo = document.getElementById('screeningInfo');
@@ -48,10 +56,11 @@ async function loadScreeningData(screeningId) {
             ${screeningData.vipPrice ? `<p><strong>Cena VIP:</strong> ${screeningData.vipPrice.toFixed(2)} PLN</p>` : ''}
         `;
         
+        loaderService.hideFullScreen();
         document.getElementById('reservationContent').style.display = 'block';
-        document.getElementById('loadingMessage').style.display = 'none';
     } catch (error) {
         console.error('Error loading screening data:', error);
+        loaderService.hideFullScreen();
         showError('Nie udało się załadować danych seansu');
     }
 }
@@ -244,12 +253,12 @@ function removeSeat(seatId) {
  */
 document.getElementById('confirmReservationBtn').addEventListener('click', async () => {
     if (selectedSeats.size === 0) {
-        alert('Wybierz przynajmniej jedno miejsce');
+        notificationService.showWarning('Wybierz przynajmniej jedno miejsce');
         return;
     }
     
     if (!screeningData) {
-        alert('Brak danych seansu');
+        notificationService.showError('Brak danych seansu');
         return;
     }
     
@@ -265,9 +274,8 @@ document.getElementById('confirmReservationBtn').addEventListener('click', async
     };
     
     try {
-        const confirmBtn = document.getElementById('confirmReservationBtn');
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Przetwarzanie...';
+        // Pokaż loader w przycisku
+        loaderService.showButton('confirmReservationBtn', 'Przetwarzanie rezerwacji...');
         
         const result = await apiRequest('/reservations', {
             method: 'POST',
@@ -278,11 +286,9 @@ document.getElementById('confirmReservationBtn').addEventListener('click', async
         window.location.href = `/payment.html?reservationId=${result.id}`;
     } catch (error) {
         console.error('Error creating reservation:', error);
-        alert('Wystąpił błąd podczas tworzenia rezerwacji: ' + (error.message || 'Nieznany błąd'));
+        notificationService.showError('Wystąpił błąd podczas tworzenia rezerwacji: ' + (error.message || 'Nieznany błąd'));
         
-        const confirmBtn = document.getElementById('confirmReservationBtn');
-        confirmBtn.disabled = false;
-        confirmBtn.innerHTML = '<i class="bi bi-check-circle"></i> Potwierdź rezerwację';
+        loaderService.hideButton('confirmReservationBtn');
     }
 });
 

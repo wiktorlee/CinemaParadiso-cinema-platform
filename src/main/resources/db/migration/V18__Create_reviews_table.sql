@@ -15,3 +15,4 @@ CREATE INDEX idx_reviews_movie_id ON reviews(movie_id);
 CREATE INDEX idx_reviews_user_id ON reviews(user_id);
 CREATE INDEX idx_reviews_created_at ON reviews(created_at DESC);
 
+

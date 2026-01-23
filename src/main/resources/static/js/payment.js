@@ -25,8 +25,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             console.error('User not logged in:', error);
             if (error.message !== 'Timeout') {
-                alert('Musisz być zalogowany, aby dokonać płatności.');
-                window.location.href = '/login.html';
+                modalService.alert(
+                    'Wymagane logowanie',
+                    'Musisz być zalogowany, aby dokonać płatności.',
+                    () => {
+                        window.location.href = '/login.html';
+                    }
+                );
                 return;
             } else {
                 console.warn('Timeout podczas sprawdzania użytkownika - kontynuuję');
@@ -480,18 +485,18 @@ async function handlePaymentSubmit(event) {
     hidePaymentAlerts();
     
     if (!reservationData) {
-        alert('Brak danych rezerwacji');
+        notificationService.showError('Brak danych rezerwacji');
         return;
     }
     
     if (!selectedPaymentMethod) {
-        alert('Wybierz metodę płatności');
+        notificationService.showWarning('Wybierz metodę płatności');
         return;
     }
     
     const reservationIdInput = document.getElementById('reservationId');
     if (!reservationIdInput || !reservationIdInput.value) {
-        alert('Brak ID rezerwacji');
+        notificationService.showError('Brak ID rezerwacji');
         return;
     }
     
@@ -501,7 +506,7 @@ async function handlePaymentSubmit(event) {
     };
     
     if (isNaN(paymentData.reservationId)) {
-        alert('Nieprawidłowe ID rezerwacji');
+        notificationService.showError('Nieprawidłowe ID rezerwacji');
         return;
     }
     
@@ -541,14 +546,8 @@ async function handlePaymentSubmit(event) {
         paymentData.blikCode = blikCode.value;
     }
     
-    // Wyłącz przycisk
-    const payButton = document.getElementById('payButton');
-    const payButtonText = document.getElementById('payButtonText');
-    const payButtonLoader = document.getElementById('payButtonLoader');
-    
-    if (payButton) payButton.disabled = true;
-    if (payButtonText) payButtonText.style.display = 'none';
-    if (payButtonLoader) payButtonLoader.style.display = 'inline-block';
+    // Pokaż loader w przycisku
+    loaderService.showButton('payButton', 'Przetwarzanie płatności...');
     
     try {
         const response = await apiRequest('/payments/process', {
@@ -557,16 +556,31 @@ async function handlePaymentSubmit(event) {
         });
         
         if (response && response.success) {
-            // Sukces - pokaż komunikat sukcesu
-            showSuccessAlert('Płatność zakończona sukcesem!');
+            // Sukces - pokaż modal z szczegółami
+            const transactionId = response.transactionId || 'N/A';
+            const amount = response.amount ? response.amount.toFixed(2) : '0.00';
             
-            // Przekieruj po krótkim opóźnieniu
-            setTimeout(() => {
-                const transactionId = response.transactionId || 'N/A';
-                const amount = response.amount ? response.amount.toFixed(2) : '0.00';
-                alert(`Płatność zakończona sukcesem!\n\nTransakcja ID: ${transactionId}\nKwota: ${amount} PLN`);
-                window.location.href = '/profile.html';
-            }, 1000);
+            modalService.showSuccess(
+                'Płatność zakończona sukcesem!',
+                'Twoja rezerwacja została potwierdzona.',
+                {
+                    'Transakcja ID': transactionId,
+                    'Kwota': `${amount} PLN`,
+                    'Metoda płatności': getPaymentMethodName(selectedPaymentMethod)
+                },
+                [
+                    {
+                        text: 'Zobacz rezerwację',
+                        class: 'btn-primary',
+                        action: () => {
+                            window.location.href = '/profile.html';
+                        }
+                    }
+                ]
+            );
+            
+            // Toast notification jako dodatkowe potwierdzenie
+            notificationService.showSuccess('Płatność zakończona sukcesem!');
         } else {
             // Błąd płatności
             const errorMessage = response && response.message ? response.message : 'Nieznany błąd';
@@ -589,11 +603,14 @@ async function handlePaymentSubmit(event) {
  * Wyświetla komunikat o błędzie
  */
 function showErrorAlert(message) {
+    // Użyj nowego systemu powiadomień
+    notificationService.showError(message || 'Wystąpił błąd podczas przetwarzania płatności.');
+    
+    // Zachowaj kompatybilność z istniejącym kodem (ukryj sukces jeśli istnieje)
     const errorAlert = document.getElementById('errorAlert');
     const errorMessageText = document.getElementById('errorMessageText');
     const successAlert = document.getElementById('successAlert');
     
-    // Najpierw ukryj sukces, potem pokaż błąd
     if (successAlert) {
         successAlert.style.display = 'none';
     }
@@ -609,10 +626,13 @@ function showErrorAlert(message) {
  * Wyświetla komunikat o sukcesie
  */
 function showSuccessAlert(message) {
+    // Użyj nowego systemu powiadomień
+    notificationService.showSuccess(message || 'Operacja zakończona sukcesem!');
+    
+    // Zachowaj kompatybilność z istniejącym kodem
     const errorAlert = document.getElementById('errorAlert');
     const successAlert = document.getElementById('successAlert');
     
-    // Najpierw ukryj błąd, potem pokaż sukces
     if (errorAlert) {
         errorAlert.style.display = 'none';
     }
@@ -623,6 +643,21 @@ function showSuccessAlert(message) {
             successText.textContent = message || 'Płatność zakończona sukcesem!';
         }
     }
+}
+
+/**
+ * Zwraca czytelną nazwę metody płatności
+ */
+function getPaymentMethodName(method) {
+    const names = {
+        'CREDIT_CARD': 'Karta kredytowa',
+        'DEBIT_CARD': 'Karta debetowa',
+        'BLIK': 'BLIK',
+        'PAYPAL': 'PayPal',
+        'CASH': 'Gotówka',
+        'MOCK': 'Symulacja'
+    };
+    return names[method] || method;
 }
 
 /**
@@ -647,19 +682,7 @@ function hidePaymentAlerts() {
  * Resetuje stan przycisku płatności
  */
 function resetPaymentButton() {
-    const payButton = document.getElementById('payButton');
-    const payButtonText = document.getElementById('payButtonText');
-    const payButtonLoader = document.getElementById('payButtonLoader');
-    
-    if (payButton) {
-        payButton.disabled = false;
-    }
-    if (payButtonText) {
-        payButtonText.style.display = 'inline';
-    }
-    if (payButtonLoader) {
-        payButtonLoader.style.display = 'none';
-    }
+    loaderService.hideButton('payButton');
 }
 
 /**

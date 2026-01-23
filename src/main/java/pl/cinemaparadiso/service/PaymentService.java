@@ -4,13 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import pl.cinemaparadiso.dto.PaymentRequestDTO;
 import pl.cinemaparadiso.dto.PaymentResponseDTO;
 import pl.cinemaparadiso.entity.Reservation;
 import pl.cinemaparadiso.enums.PaymentMethod;
 import pl.cinemaparadiso.enums.ReservationStatus;
 import pl.cinemaparadiso.exception.ReservationNotFoundException;
+import pl.cinemaparadiso.exception.SeatNotAvailableException;
 import pl.cinemaparadiso.repository.ReservationRepository;
+import pl.cinemaparadiso.service.ReservationService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -41,7 +44,11 @@ import java.util.UUID;
 public class PaymentService {
     
     private final ReservationRepository reservationRepository;
+    private final ReservationService reservationService;
     private final Random random = new Random();
+    
+    // Nie dodajemy QRCodeService tutaj - QR będzie generowany na żądanie w TicketController
+    // Token będzie generowany automatycznie przy pierwszym żądaniu QR code
     
     /**
      * Przetwarza płatność (symulacja)
@@ -77,6 +84,23 @@ public class PaymentService {
             reservation.getStatus() != ReservationStatus.PAYMENT_FAILED) {
             throw new IllegalArgumentException(
                     "Rezerwacja nie oczekuje na płatność. Status: " + reservation.getStatus());
+        }
+        
+        // KRYTYCZNA WERYFIKACJA: Sprawdź dostępność miejsc przed finalizacją płatności
+        // To zapobiega sytuacji, gdy ktoś inny zarezerwował te same miejsca w międzyczasie
+        try {
+            reservationService.verifySeatsAvailability(reservation);
+            log.debug("Weryfikacja dostępności miejsc zakończona pomyślnie dla rezerwacji ID: {}", 
+                    reservation.getId());
+        } catch (SeatNotAvailableException e) {
+            log.warn("Nie można zrealizować płatności - miejsca są niedostępne. Rezerwacja ID: {}, Błąd: {}", 
+                    reservation.getId(), e.getMessage());
+            // Anuluj rezerwację, bo miejsca są już zajęte
+            reservation.setStatus(ReservationStatus.CANCELLED);
+            reservationRepository.save(reservation);
+            throw new IllegalArgumentException(
+                    "Nie można zrealizować płatności. " + e.getMessage() + 
+                    " Rezerwacja została anulowana. Proszę wybrać inne miejsca.");
         }
         
         // SPECJALNA OBSŁUGA PŁATNOŚCI GOTÓWKĄ - automatyczne oznaczenie jako PAID
@@ -122,11 +146,47 @@ public class PaymentService {
             BigDecimal amount = reservation.getTotalPrice();
             
             // Aktualizuj rezerwację
-            reservation.setStatus(ReservationStatus.PAID);
-            reservation.setPaymentMethod(paymentRequest.getPaymentMethod());
-            reservation.setPaymentDate(LocalDateTime.now());
-            reservation.setPaymentTransactionId(transactionId);
-            reservationRepository.save(reservation);
+            // Hibernate automatycznie sprawdzi wersję (optimistic locking)
+            // Jeśli wersja się nie zgadza, rzuci ObjectOptimisticLockingFailureException
+            Reservation finalReservation = reservation; // final reference dla lambda/catch
+            try {
+                finalReservation.setStatus(ReservationStatus.PAID);
+                finalReservation.setPaymentMethod(paymentRequest.getPaymentMethod());
+                finalReservation.setPaymentDate(LocalDateTime.now());
+                finalReservation.setPaymentTransactionId(transactionId);
+                reservationRepository.save(finalReservation);
+            } catch (ObjectOptimisticLockingFailureException e) {
+                log.error("Błąd optymistycznego blokowania podczas płatności. Rezerwacja ID: {} została zmodyfikowana przez inny proces.", 
+                        finalReservation.getId());
+                // Ponowna weryfikacja miejsc (może ktoś je zarezerwował)
+                try {
+                    reservationService.verifySeatsAvailability(finalReservation);
+                    // Jeśli miejsca są dostępne, spróbuj ponownie (pobierz świeżą wersję)
+                    Reservation freshReservation = reservationRepository.findByIdWithLock(finalReservation.getId())
+                            .orElseThrow(() -> new ReservationNotFoundException(
+                                    "Rezerwacja o ID " + finalReservation.getId() + " nie istnieje"));
+                    if (freshReservation.getStatus() == ReservationStatus.PENDING_PAYMENT || 
+                        freshReservation.getStatus() == ReservationStatus.PAYMENT_FAILED) {
+                        freshReservation.setStatus(ReservationStatus.PAID);
+                        freshReservation.setPaymentMethod(paymentRequest.getPaymentMethod());
+                        freshReservation.setPaymentDate(LocalDateTime.now());
+                        freshReservation.setPaymentTransactionId(transactionId);
+                        reservationRepository.save(freshReservation);
+                        reservation = freshReservation; // Aktualizuj referencję
+                        log.info("Ponowna próba płatności zakończona sukcesem. Rezerwacja ID: {}", reservation.getId());
+                    } else {
+                        throw new IllegalArgumentException("Rezerwacja została już przetworzona. Status: " + freshReservation.getStatus());
+                    }
+                } catch (SeatNotAvailableException ex) {
+                    log.error("Miejsca są niedostępne po błędzie optymistycznego blokowania. Rezerwacja ID: {}", 
+                            finalReservation.getId());
+                    finalReservation.setStatus(ReservationStatus.CANCELLED);
+                    reservationRepository.save(finalReservation);
+                    throw new IllegalArgumentException(
+                            "Nie można zrealizować płatności. " + ex.getMessage() + 
+                            " Rezerwacja została anulowana. Proszę wybrać inne miejsca.");
+                }
+            }
             
             log.info("Płatność zakończona sukcesem. Rezerwacja ID: {}, Transakcja ID: {}", 
                     reservation.getId(), transactionId);
@@ -142,6 +202,8 @@ public class PaymentService {
                     .build();
         } else {
             // Płatność nie powiodła się
+            // Nie trzeba sprawdzać miejsc - rezerwacja pozostaje w PENDING_PAYMENT lub PAYMENT_FAILED
+            // Użytkownik może spróbować ponownie
             reservation.setStatus(ReservationStatus.PAYMENT_FAILED);
             reservationRepository.save(reservation);
             

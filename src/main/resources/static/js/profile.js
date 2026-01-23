@@ -1,48 +1,30 @@
-/**
- * Skrypt dla strony profilu użytkownika
- */
-
 document.addEventListener('DOMContentLoaded', async () => {
-    // Nawigacja jest obsługiwana przez navigation.js
-    
-    // Sprawdź czy użytkownik jest zalogowany
     try {
         const user = await getCurrentUser();
         
-        // Wyświetl informacje o użytkowniku
         document.getElementById('username').textContent = user.username;
         document.getElementById('firstName').textContent = user.firstName;
         document.getElementById('lastName').textContent = user.lastName;
         document.getElementById('role').textContent = user.role;
         
-        // Załaduj rezerwacje (na razie placeholder)
         loadReservations();
-        
-        // Załaduj recenzje (na razie placeholder)
         loadReviews();
-        
-        // Obsługa formularza zmiany hasła
         setupChangePasswordForm();
         
     } catch (error) {
-        // Użytkownik nie jest zalogowany - przekieruj do logowania
         console.error('User not logged in:', error);
         window.location.href = '/login.html';
     }
-    
-    // Obsługa wylogowania jest w navigation.js
 });
 
-/**
- * Ładuje rezerwacje użytkownika
- */
 async function loadReservations() {
     const container = document.getElementById('reservationsContainer');
+    if (!container) return;
     
     try {
+        loaderService.showInline('reservationsContainer', 'Ładowanie rezerwacji...');
         const reservations = await apiRequest('/reservations/my', { method: 'GET' });
         
-        // Filtruj anulowane rezerwacje - nie wyświetlaj CANCELLED
         const activeReservations = reservations.filter(r => 
             r.status !== 'CANCELLED' && r.status !== 'PAYMENT_FAILED'
         );
@@ -58,7 +40,6 @@ async function loadReservations() {
         }
         
         container.innerHTML = activeReservations.map(reservation => {
-            // Status badges dla różnych statusów
             let statusBadge = '';
             if (reservation.status === 'PAID') {
                 statusBadge = '<span class="badge bg-success">Opłacona</span>';
@@ -72,8 +53,6 @@ async function loadReservations() {
                 `Rząd ${seat.rowNumber}, Miejsce ${seat.seatNumber} (${getTicketTypeName(seat.ticketType)})`
             ).join(', ');
             
-            // Przycisk anulowania tylko dla PENDING_PAYMENT
-            // Przycisk płatności dla PENDING_PAYMENT
             let actionButtons = '';
             if (reservation.status === 'PENDING_PAYMENT') {
                 actionButtons = `
@@ -86,6 +65,9 @@ async function loadReservations() {
                 `;
             } else if (reservation.status === 'PAID') {
                 actionButtons = `
+                    <button class="btn btn-sm btn-success me-2" onclick="showTicket(${reservation.id})">
+                        <i class="bi bi-qr-code"></i> Pokaż bilet
+                    </button>
                     <button class="btn btn-sm btn-danger" onclick="cancelReservation(${reservation.id})">
                         <i class="bi bi-x-circle"></i> Anuluj
                     </button>
@@ -134,27 +116,29 @@ async function loadReservations() {
     }
 }
 
-/**
- * Anuluje rezerwację
- */
 async function cancelReservation(reservationId) {
-    if (!confirm('Czy na pewno chcesz anulować tę rezerwację?')) {
-        return;
-    }
-    
-    try {
-        await apiRequest(`/reservations/${reservationId}`, { method: 'DELETE' });
-        alert('Rezerwacja została anulowana');
-        loadReservations(); // Odśwież listę
-    } catch (error) {
-        console.error('Error canceling reservation:', error);
-        alert('Wystąpił błąd podczas anulowania rezerwacji: ' + (error.message || 'Nieznany błąd'));
-    }
+    modalService.confirm(
+        'Anulowanie rezerwacji',
+        'Czy na pewno chcesz anulować tę rezerwację?',
+        async () => {
+            try {
+                await apiRequest(`/reservations/${reservationId}`, { method: 'DELETE' });
+                notificationService.showSuccess('Rezerwacja została anulowana');
+                loadReservations();
+            } catch (error) {
+                console.error('Error canceling reservation:', error);
+                notificationService.showError('Wystąpił błąd podczas anulowania rezerwacji: ' + (error.message || 'Nieznany błąd'));
+            }
+        },
+        null,
+        {
+            confirmText: 'Anuluj rezerwację',
+            cancelText: 'Zostaw',
+            type: 'warning'
+        }
+    );
 }
 
-/**
- * Zwraca nazwę typu biletu
- */
 function getTicketTypeName(ticketType) {
     const names = {
         'NORMAL': 'Normalny',
@@ -164,9 +148,6 @@ function getTicketTypeName(ticketType) {
     return names[ticketType] || ticketType;
 }
 
-/**
- * Formatuje datę i godzinę
- */
 function formatDateTime(dateTimeString) {
     const date = new Date(dateTimeString);
     return date.toLocaleString('pl-PL', {
@@ -178,21 +159,16 @@ function formatDateTime(dateTimeString) {
     });
 }
 
-/**
- * Pokazuje wypełnienie sali dla seansu
- */
 async function showRoomOccupancy(screeningId) {
     const container = document.getElementById(`occupancy-${screeningId}`);
     const button = document.getElementById(`occupancyBtn-${screeningId}`);
     
     if (container.style.display === 'none') {
-        // Pokaż wypełnienie
         container.style.display = 'block';
         container.innerHTML = '<p class="info-message">Ładowanie danych sali...</p>';
         button.innerHTML = '<i class="bi bi-grid-3x3-gap"></i> Ukryj wypełnienie sali';
         
         try {
-            // Pobierz dostępne miejsca
             const seats = await apiRequest(`/reservations/screenings/${screeningId}/seats`, { method: 'GET' });
             
             if (!seats || seats.length === 0) {
@@ -200,10 +176,8 @@ async function showRoomOccupancy(screeningId) {
                 return;
             }
             
-            // Pobierz szczegóły seansu dla informacji o sali
             const screening = await apiRequest(`/screenings/${screeningId}`, { method: 'GET' });
             
-            // Grupuj miejsca po rzędach
             const seatsByRow = new Map();
             seats.forEach(seat => {
                 if (!seatsByRow.has(seat.rowNumber)) {
@@ -212,19 +186,14 @@ async function showRoomOccupancy(screeningId) {
                 seatsByRow.get(seat.rowNumber).push(seat);
             });
             
-            // Sortuj rzędy
             const sortedRows = Array.from(seatsByRow.keys()).sort((a, b) => a - b);
             
-            // Oblicz statystyki
             const totalSeats = seats.length;
             const availableSeats = seats.filter(s => s.isAvailable && s.isSeatEnabled).length;
             const reservedSeats = seats.filter(s => !s.isAvailable).length;
             const disabledSeats = seats.filter(s => !s.isSeatEnabled).length;
             const vipSeats = seats.filter(s => s.seatType === 'VIP' || s.seatType === 'Vip').length;
             
-            console.log('Seats data:', seats.slice(0, 5)); // Debug - pierwsze 5 miejsc
-            
-            // Renderuj siatkę
             let gridHTML = `
                 <div style="background: var(--light); padding: 15px; border-radius: 8px; margin-top: 10px;">
                     <h5>Wypełnienie sali</h5>
@@ -253,7 +222,6 @@ async function showRoomOccupancy(screeningId) {
                     let borderColor = '';
                     let title = `Rząd ${seat.rowNumber}, Miejsce ${seat.seatNumber}`;
                     
-                    // Sprawdź status miejsca w odpowiedniej kolejności
                     if (!seat.isSeatEnabled) {
                         backgroundColor = '#f44336';
                         borderColor = '#d32f2f';
@@ -308,15 +276,11 @@ async function showRoomOccupancy(screeningId) {
             container.innerHTML = '<p class="error-message">Nie udało się załadować danych sali.</p>';
         }
     } else {
-        // Ukryj wypełnienie
         container.style.display = 'none';
         button.innerHTML = '<i class="bi bi-grid-3x3-gap"></i> Pokaż wypełnienie sali';
     }
 }
 
-/**
- * Konfiguruje formularz zmiany hasła
- */
 function setupChangePasswordForm() {
     const form = document.getElementById('changePasswordForm');
     const messageDiv = document.getElementById('changePasswordMessage');
@@ -328,7 +292,6 @@ function setupChangePasswordForm() {
         const newPassword = document.getElementById('newPassword').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         
-        // Walidacja po stronie klienta
         if (newPassword.length < 6) {
             messageDiv.innerHTML = '<p class="error-message">Nowe hasło musi mieć co najmniej 6 znaków</p>';
             return;
@@ -354,7 +317,6 @@ function setupChangePasswordForm() {
             messageDiv.innerHTML = '<p class="success-message">Hasło zostało zmienione pomyślnie!</p>';
             form.reset();
             
-            // Ukryj komunikat po 5 sekundach
             setTimeout(() => {
                 messageDiv.innerHTML = '';
             }, 5000);
@@ -366,9 +328,6 @@ function setupChangePasswordForm() {
     });
 }
 
-/**
- * Ładuje recenzje użytkownika
- */
 async function loadReviews(page = 0) {
     const container = document.getElementById('reviewsContainer');
     
@@ -393,7 +352,6 @@ async function loadReviews(page = 0) {
             return;
         }
         
-        // Pobierz informacje o filmach dla każdej recenzji
         const reviewsWithMovies = await Promise.all(reviews.map(async (review) => {
             try {
                 const movie = await apiRequest(`/movies/${review.movieId}`, { method: 'GET' });
@@ -471,40 +429,167 @@ async function loadReviews(page = 0) {
     }
 }
 
-/**
- * Usuwa recenzję z profilu
- */
 async function deleteReviewFromProfile(reviewId) {
-    if (!confirm('Czy na pewno chcesz usunąć tę recenzję?')) {
-        return;
-    }
-    
-    try {
-        await apiRequest(`/reviews/${reviewId}`, { method: 'DELETE' });
-        alert('Recenzja została usunięta.');
-        loadReviews(); // Odśwież listę
-    } catch (error) {
-        console.error('Error deleting review:', error);
-        alert('Wystąpił błąd podczas usuwania recenzji: ' + (error.message || 'Nieznany błąd'));
-    }
+    modalService.confirm(
+        'Usuwanie recenzji',
+        'Czy na pewno chcesz usunąć tę recenzję? Ta operacja jest nieodwracalna.',
+        async () => {
+            try {
+                await apiRequest(`/reviews/${reviewId}`, { method: 'DELETE' });
+                notificationService.showSuccess('Recenzja została usunięta.');
+                loadReviews();
+            } catch (error) {
+                console.error('Error deleting review:', error);
+                notificationService.showError('Wystąpił błąd podczas usuwania recenzji: ' + (error.message || 'Nieznany błąd'));
+            }
+        },
+        null,
+        {
+            confirmText: 'Usuń',
+            cancelText: 'Anuluj',
+            type: 'danger'
+        }
+    );
 }
 
-/**
- * Pokazuje szczegóły filmu z profilu (otwiera modal)
- */
+window.showTicket = function(reservationId) {
+    console.log('showTicket called with reservationId:', reservationId);
+    
+    apiRequest(`/reservations/my`, { method: 'GET' })
+        .then(reservations => {
+            console.log('Reservations loaded:', reservations);
+            const reservation = reservations.find(r => r.id === reservationId);
+            if (!reservation) {
+                console.error('Reservation not found:', reservationId);
+                notificationService.showError('Rezerwacja nie znaleziona');
+                return;
+            }
+            
+            if (reservation.status !== 'PAID') {
+                console.warn('Reservation not paid:', reservation.status);
+                notificationService.showError('Bilet dostępny tylko dla opłaconych rezerwacji');
+                return;
+            }
+            
+            console.log('Creating modal for reservation:', reservation);
+            
+            const modal = document.createElement('div');
+            modal.className = 'ticket-modal';
+            modal.id = 'ticketModal';
+            modal.setAttribute('tabindex', '-1');
+            modal.setAttribute('role', 'dialog');
+            modal.innerHTML = `
+                <div class="ticket-modal-dialog">
+                    <div class="ticket-modal-content">
+                        <div class="ticket-modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 15px 15px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                            <h5 style="margin: 0; font-size: 1.5em;">
+                                <i class="bi bi-ticket-perforated me-2"></i>Bilet na seans
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" onclick="closeTicketModal()" aria-label="Close" style="background: rgba(255,255,255,0.3); border-radius: 50%; padding: 5px;"></button>
+                        </div>
+                        <div class="ticket-modal-body" style="padding: 20px;">
+                            <div class="ticket-content">
+                                <div class="ticket-info mb-4">
+                                    <h3 class="text-center mb-3">${reservation.movieTitle}</h3>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Sala:</strong> ${reservation.roomNumber}</p>
+                                            <p><strong>Data i godzina:</strong> ${formatDateTime(reservation.screeningStartTime)}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Miejsca:</strong> ${reservation.seats.map(s => `Rząd ${s.rowNumber}, Miejsce ${s.seatNumber}`).join(', ')}</p>
+                                            <p><strong>Cena:</strong> ${reservation.totalPrice.toFixed(2)} PLN</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="qr-code-container text-center mb-4">
+                                    <h5 class="mb-3">Kod QR biletu</h5>
+                                    <div class="qr-code-wrapper">
+                                        <img id="qr-code-image-${reservationId}" 
+                                             src="/api/tickets/${reservationId}/qr-code" 
+                                             alt="QR Code" 
+                                             style="max-width: 300px; height: auto;"
+                                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'300\\'%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\'%3EBłąd ładowania QR%3C/text%3E%3C/svg%3E';">
+                                    </div>
+                                    <p class="text-muted mt-2" style="font-size: 0.9em;">
+                                        <i class="bi bi-info-circle"></i> Pokaż ten kod przy wejściu do kina
+                                    </p>
+                                </div>
+                                
+                                <div class="ticket-footer text-center">
+                                    <p class="text-muted mb-0">
+                                        <small>Rezerwacja #${reservation.id}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ticket-modal-footer" style="padding: 15px 20px; border-top: 1px solid #e9ecef; display: flex; justify-content: flex-end; gap: 10px;">
+                            <button type="button" class="btn btn-secondary" onclick="closeTicketModal()">Zamknij</button>
+                            <button type="button" class="btn btn-primary" onclick="downloadTicket(${reservationId})">
+                                <i class="bi bi-download"></i> Pobierz QR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const backdrop = document.createElement('div');
+            backdrop.className = 'ticket-modal-backdrop';
+            backdrop.onclick = closeTicketModal;
+            
+            document.body.appendChild(backdrop);
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+            
+            console.log('Modal created and added to DOM');
+            
+            modal.focus();
+        })
+        .catch(error => {
+            console.error('Error loading reservation:', error);
+            notificationService.showError('Nie udało się załadować biletu: ' + (error.message || 'Nieznany błąd'));
+        });
+};
+
+window.closeTicketModal = function() {
+    console.log('closeTicketModal called');
+    const modal = document.getElementById('ticketModal');
+    const backdrop = document.querySelector('.ticket-modal-backdrop');
+    
+    if (modal) {
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
+    
+    if (backdrop) {
+        backdrop.style.opacity = '0';
+        setTimeout(() => {
+            backdrop.remove();
+        }, 300);
+    }
+    
+    document.body.style.overflow = '';
+};
+
+window.downloadTicket = function(reservationId) {
+    const link = document.createElement('a');
+    link.href = `/api/tickets/${reservationId}/qr-code`;
+    link.download = `bilet-${reservationId}.png`;
+    link.click();
+    notificationService.showSuccess('QR code pobrany pomyślnie');
+};
+
 window.showMovieDetailsFromProfile = function(movieId) {
-    // Użyj funkcji z movies.js jeśli jest dostępna
     if (typeof showMovieDetails === 'function') {
         showMovieDetails(movieId);
     } else {
-        // Jeśli nie ma funkcji, przekieruj do strony filmów
         window.location.href = '/movies.html';
     }
 };
 
-/**
- * Escapuje HTML w tekście (zabezpieczenie przed XSS)
- */
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;

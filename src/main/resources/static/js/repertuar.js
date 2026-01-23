@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      */
     async function loadRepertoire(date) {
         try {
-            repertoireContainer.innerHTML = '<p class="text-muted">Ładowanie repertuaru...</p>';
+            loaderService.showInline('repertoireContainer', 'Ładowanie repertuaru...');
             noScreeningsMessage.style.display = 'none';
             
             const response = await apiRequest(`/screenings/repertoire?date=${date}`, {

@@ -16,3 +16,4 @@ CREATE INDEX idx_movie_ratings_movie_id ON movie_ratings(movie_id);
 CREATE INDEX idx_movie_ratings_user_id ON movie_ratings(user_id);
 CREATE INDEX idx_movie_ratings_rating ON movie_ratings(rating);
 
+
