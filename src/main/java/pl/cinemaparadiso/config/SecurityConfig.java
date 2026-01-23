@@ -46,7 +46,7 @@ public class SecurityConfig {
             // Konfiguracja autoryzacji (kto może co robić)
             .authorizeHttpRequests(auth -> auth
                 // Statyczne pliki (HTML, CSS, JS) - dostęp dla wszystkich
-                .requestMatchers("/", "/index.html", "/login.html", "/register.html", "/profile.html", "/movies.html", "/repertuar.html", "/reservation.html", "/admin/screenings.html", "/admin/audit-logs.html").permitAll()
+                .requestMatchers("/", "/index.html", "/login.html", "/register.html", "/profile.html", "/movies.html", "/repertuar.html", "/reservation.html", "/payment.html", "/admin/screenings.html", "/admin/audit-logs.html").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                 // Endpointy autentykacji są publiczne (każdy może się zarejestrować/zalogować)
                 .requestMatchers("/api/auth/**").permitAll()

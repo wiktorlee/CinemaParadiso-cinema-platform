@@ -52,6 +52,25 @@ public class ReservationController {
     }
     
     /**
+     * Pobiera rezerwację po ID (tylko własną)
+     * 
+     * GET /api/reservations/{id}
+     * Wymaga zalogowania
+     * 
+     * @param id - ID rezerwacji
+     * @return rezerwacja
+     */
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ReservationDTO> getReservationById(@PathVariable Long id) {
+        Long userId = getCurrentUserId();
+        log.debug("Pobieranie rezerwacji ID: {} przez użytkownika ID: {}", id, userId);
+        
+        ReservationDTO reservation = reservationService.getReservationById(id, userId);
+        return ResponseEntity.ok(reservation);
+    }
+    
+    /**
      * Tworzy nową rezerwację
      * 
      * POST /api/reservations

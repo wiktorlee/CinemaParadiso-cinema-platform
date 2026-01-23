@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Płatność - Cinema Paradiso</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .pricing-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            height: 100%;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border-color: var(--accent, #ffc107);
+        }
+        
+        .pricing-card.selected {
+            border-color: var(--accent, #ffc107);
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+        
+        .pricing-header {
+            background: linear-gradient(135deg, var(--primary, #0d6efd) 0%, var(--accent, #ffc107) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+        
+        .payment-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .payment-summary-panel {
+            display: none;
+        }
+        
+        .payment-summary-panel.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header class="p-3 text-bg-dark">
+        <div class="container">
+            <div class="header-content">
+                <a href="/index.html" class="logo-section">
+                    <div class="logo-icon">
+                        <i class="bi bi-film"></i>
+                    </div>
+                    <span class="logo-text">Cinema Paradiso</span>
+                </a>
+                
+                <ul class="nav-links">
+                    <li><a href="/index.html" class="nav-link">Strona Główna</a></li>
+                    <li><a href="/movies.html" class="nav-link">Filmy</a></li>
+                    <li><a href="/repertuar.html" class="nav-link">Repertuar</a></li>
+                </ul>
+                
+                <div class="header-actions">
+                    <a href="/login.html" id="loginLink" class="btn-header btn-outline-light-custom">Zaloguj się</a>
+                    <a href="/register.html" id="registerLink" class="btn-header btn-warning-custom">Zarejestruj się</a>
+                    <a href="/profile.html" id="profileLink" class="btn-header btn-outline-light-custom" style="display: none;">Mój Profil</a>
+                    
+                    <!-- Dropdown menu dla admina -->
+                    <div class="admin-dropdown" id="adminDropdown" style="display: none;">
+                        <button id="adminDropdownToggle" class="btn-header btn-outline-light-custom admin-dropdown-toggle">
+                            <i class="bi bi-gear"></i> Panel Admina
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="admin-dropdown-menu" id="adminDropdownMenu">
+                            <a href="/admin/movies.html">
+                                <i class="bi bi-film me-2"></i> Zarządzanie Filmami
+                            </a>
+                            <a href="/admin/rooms.html">
+                                <i class="bi bi-door-open me-2"></i> Zarządzanie Salami
+                            </a>
+                            <a href="/admin/screenings.html">
+                                <i class="bi bi-calendar-event me-2"></i> Zarządzanie Seansami
+                            </a>
+                            <a href="/admin/audit-logs.html">
+                                <i class="bi bi-clock-history me-2"></i> Logi Audytowe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <button id="logoutBtn" class="btn-header" style="display: none;">Wyloguj</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container my-5">
+        <!-- Ekran wyboru metody płatności -->
+        <div id="paymentMethodSelection">
+            <div class="text-center mb-5">
+                <h2 class="display-6 fw-bold">Wybierz metodę płatności</h2>
+                <p class="lead text-muted">Wybierz sposób, w jaki chcesz opłacić rezerwację</p>
+            </div>
+            
+            <!-- Alert o symulacji -->
+            <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+                <i class="bi bi-info-circle me-2 fs-4"></i>
+                <div>
+                    <strong>SYMULACJA PŁATNOŚCI:</strong> Wprowadzone dane nie są zapisywane. 
+                    Płatność jest tylko symulowana dla celów testowych.
+                </div>
+            </div>
+            
+            <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+                <!-- Karta -->
+                <div class="col">
+                    <div class="card mb-4 rounded-3 shadow-sm pricing-card" data-method="CREDIT_CARD">
+                        <div class="pricing-header">
+                            <i class="bi bi-credit-card payment-icon"></i>
+                            <h4 class="my-0 fw-normal">Karta</h4>
+                        </div>
+                        <div class="card-body">
+                            <h1 class="card-title pricing-card-title">Karta</h1>
+                            <ul class="list-unstyled mt-3 mb-4">
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Karta kredytowa</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Karta debetowa</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Visa, Mastercard</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Bezpieczna płatność</li>
+                            </ul>
+                            <button type="button" class="w-100 btn btn-lg btn-outline-primary" data-method="CREDIT_CARD">
+                                Wybierz
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- BLIK -->
+                <div class="col">
+                    <div class="card mb-4 rounded-3 shadow-sm pricing-card" data-method="BLIK">
+                        <div class="pricing-header">
+                            <i class="bi bi-phone payment-icon"></i>
+                            <h4 class="my-0 fw-normal">BLIK</h4>
+                        </div>
+                        <div class="card-body">
+                            <h1 class="card-title pricing-card-title">BLIK</h1>
+                            <ul class="list-unstyled mt-3 mb-4">
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Płatność przez aplikację</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Szybka i bezpieczna</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>6-cyfrowy kod</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Natychmiastowa płatność</li>
+                            </ul>
+                            <button type="button" class="w-100 btn btn-lg btn-outline-primary" data-method="BLIK">
+                                Wybierz
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gotówka na miejscu -->
+                <div class="col">
+                    <div class="card mb-4 rounded-3 shadow-sm pricing-card" data-method="CASH">
+                        <div class="pricing-header">
+                            <i class="bi bi-cash-coin payment-icon"></i>
+                            <h4 class="my-0 fw-normal">Gotówka</h4>
+                        </div>
+                        <div class="card-body">
+                            <h1 class="card-title pricing-card-title">Gotówka</h1>
+                            <ul class="list-unstyled mt-3 mb-4">
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Płatność w kasie</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Przy odbiorze</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Bez dodatkowych opłat</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Rezerwacja do 30 min</li>
+                            </ul>
+                            <button type="button" class="w-100 btn btn-lg btn-outline-primary" data-method="CASH">
+                                Wybierz
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel podsumowania i płatności (ukryty domyślnie) -->
+        <div id="paymentSummaryPanel" class="payment-summary-panel">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Dane płatności</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="paymentForm" novalidate>
+                                <input type="hidden" id="reservationId" name="reservationId">
+                                <input type="hidden" id="selectedPaymentMethod" name="selectedPaymentMethod">
+                                
+                                <!-- Szczegóły karty (dla CREDIT_CARD) -->
+                                <div id="cardDetails" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="cardNumber" class="form-label">Numer karty</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-credit-card"></i></span>
+                                            <input type="text" class="form-control" id="cardNumber" 
+                                                   placeholder="1234 5678 9012 3456" maxlength="19">
+                                        </div>
+                                        <div class="form-text">SYMULACJA - dane nie są zapisywane</div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="expiryDate" class="form-label">Data ważności</label>
+                                            <input type="text" class="form-control" id="expiryDate" 
+                                                   placeholder="MM/RR" maxlength="5">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="cvv" class="form-label">CVV</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="cvv" 
+                                                       placeholder="123" maxlength="4">
+                                                <span class="input-group-text" data-bs-toggle="tooltip" 
+                                                      title="3-4 cyfry na odwrocie karty">
+                                                    <i class="bi bi-info-circle"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Szczegóły BLIK -->
+                                <div id="blikDetails" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="blikCode" class="form-label">Kod BLIK</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                                            <input type="text" class="form-control" id="blikCode" 
+                                                   placeholder="123456" maxlength="6">
+                                        </div>
+                                        <div class="form-text">Wprowadź 6-cyfrowy kod z aplikacji bankowej</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Komunikaty -->
+                                <div id="paymentAlerts">
+                                    <div class="alert alert-success d-flex align-items-center mt-3" role="alert" id="successAlert" style="display: none;">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <div>Płatność zakończona sukcesem!</div>
+                                    </div>
+                                    <div class="alert alert-danger d-flex align-items-center mt-3" role="alert" id="errorAlert" style="display: none;">
+                                        <i class="bi bi-x-circle me-2"></i>
+                                        <div id="errorMessageText">Płatność nie powiodła się. Spróbuj ponownie.</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Przycisk płatności -->
+                                <button type="submit" class="btn btn-primary btn-lg w-100 mt-3" id="payButton">
+                                    <span id="payButtonText">
+                                        <i class="bi bi-credit-card me-2"></i>Zapłać <span id="buttonAmount">0.00</span> PLN
+                                    </span>
+                                    <span id="payButtonLoader" class="spinner-border spinner-border-sm me-2"
+                                          role="status" style="display: none;"></span>
+                                </button>
+                                
+                                <!-- Przycisk powrotu -->
+                                <button type="button" class="btn btn-outline-secondary w-100 mt-2" id="backButton">
+                                    <i class="bi bi-arrow-left me-2"></i>Wróć do wyboru metody
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Podsumowanie -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-receipt"></i> Podsumowanie</h5>
+                        </div>
+                        <div class="card-body" id="summaryContent">
+                            <!-- Zostanie wypełnione przez JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Komunikat błędu -->
+        <div id="errorMessage" class="alert alert-danger mt-4" style="display: none;"></div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h5>Cinema Paradiso</h5>
+                    <p style="color: rgba(255, 255, 255, 0.7); margin: 0;">
+                        System zarządzania rezerwacjami biletów do kina.
+                        Najlepsze filmy w najlepszych cenach.
+                    </p>
+                </div>
+
+                <div class="footer-section">
+                    <h5>Nawigacja</h5>
+                    <ul>
+                        <li><a href="/index.html">Strona Główna</a></li>
+                        <li><a href="/movies.html">Filmy</a></li>
+                        <li><a href="/repertuar.html">Repertuar</a></li>
+                        <li><a href="/login.html">Zaloguj się</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h5>Informacje</h5>
+                    <ul>
+                        <li><a href="/register.html">Rejestracja</a></li>
+                        <li><a href="/profile.html">Mój Profil</a></li>
+                        <li><a href="/reservation.html">Rezerwacje</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h5>Kontakt</h5>
+                    <p style="color: rgba(255, 255, 255, 0.7); margin: 0 0 0.5rem 0;">
+                        Email: kontakt@cinemaparadiso.pl<br>
+                        Telefon: +48 123 456 789
+                    </p>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div>
+                    <p style="margin: 0; color: rgba(255, 255, 255, 0.6);">
+                        © 2025 Cinema Paradiso. Wszelkie prawa zastrzeżone.
+                    </p>
+                </div>
+                <div class="footer-social">
+                    <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/js/payment.js"></script>
+</body>
+</html>

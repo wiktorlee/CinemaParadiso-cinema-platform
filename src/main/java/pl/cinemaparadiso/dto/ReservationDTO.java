@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import pl.cinemaparadiso.enums.PaymentMethod;
 import pl.cinemaparadiso.enums.ReservationStatus;
 
 import java.math.BigDecimal;
@@ -30,6 +31,11 @@ public class ReservationDTO {
     private ReservationStatus status;
     private BigDecimal totalPrice;
     private List<ReservationSeatDTO> seats; // Lista zarezerwowanych miejsc
+    
+    // Pola płatności
+    private PaymentMethod paymentMethod;
+    private LocalDateTime paymentDate;
+    private String paymentTransactionId;
 }
 
 

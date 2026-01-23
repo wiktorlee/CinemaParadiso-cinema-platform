@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.envers.Audited;
+import pl.cinemaparadiso.enums.PaymentMethod;
 import pl.cinemaparadiso.enums.ReservationStatus;
 
 import java.math.BigDecimal;
@@ -58,7 +59,27 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private ReservationStatus status = ReservationStatus.ACTIVE;
+    private ReservationStatus status = ReservationStatus.PENDING_PAYMENT;
+
+    /**
+     * Metoda płatności (opcjonalne, ustawiane po płatności)
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
+    private PaymentMethod paymentMethod;
+
+    /**
+     * Data płatności (opcjonalne, ustawiane po płatności)
+     */
+    @Column(name = "payment_date")
+    private LocalDateTime paymentDate;
+
+    /**
+     * ID transakcji płatności (opcjonalne, ustawiane po płatności)
+     * Używane do identyfikacji płatności w systemie symulacji
+     */
+    @Column(name = "payment_transaction_id")
+    private String paymentTransactionId;
 
     /**
      * @OneToMany - jedna rezerwacja może zawierać wiele miejsc

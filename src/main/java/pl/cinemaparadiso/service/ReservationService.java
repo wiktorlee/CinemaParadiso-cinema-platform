@@ -119,12 +119,12 @@ public class ReservationService {
                 })
                 .collect(Collectors.toList());
         
-        // Utwórz rezerwację
+        // Utwórz rezerwację (domyślnie PENDING_PAYMENT - oczekuje na płatność)
         Reservation reservation = Reservation.builder()
                 .user(user)
                 .screening(screening)
                 .createdAt(LocalDateTime.now())
-                .status(ReservationStatus.ACTIVE)
+                .status(ReservationStatus.PENDING_PAYMENT)
                 .reservationSeats(reservationSeats)
                 .build();
         
@@ -150,6 +150,24 @@ public class ReservationService {
         return reservations.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
+    }
+    
+    /**
+     * Pobiera rezerwację po ID (tylko dla właściciela)
+     */
+    @Transactional(readOnly = true)
+    public ReservationDTO getReservationById(Long reservationId, Long userId) {
+        log.debug("Pobieranie rezerwacji ID: {} dla użytkownika ID: {}", reservationId, userId);
+        
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ReservationNotFoundException("Rezerwacja o ID " + reservationId + " nie istnieje"));
+        
+        // Sprawdź czy rezerwacja należy do użytkownika
+        if (!reservation.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Nie masz uprawnień do tej rezerwacji");
+        }
+        
+        return toDTO(reservation);
     }
     
     /**
@@ -209,6 +227,9 @@ public class ReservationService {
                 .status(reservation.getStatus())
                 .totalPrice(reservation.getTotalPrice())
                 .seats(seatDTOs)
+                .paymentMethod(reservation.getPaymentMethod())
+                .paymentDate(reservation.getPaymentDate())
+                .paymentTransactionId(reservation.getPaymentTransactionId())
                 .build();
     }
 }

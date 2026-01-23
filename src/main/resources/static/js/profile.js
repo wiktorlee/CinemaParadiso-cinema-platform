@@ -42,30 +42,55 @@ async function loadReservations() {
     try {
         const reservations = await apiRequest('/reservations/my', { method: 'GET' });
         
-        if (reservations.length === 0) {
+        // Filtruj anulowane rezerwacje - nie wyświetlaj CANCELLED
+        const activeReservations = reservations.filter(r => 
+            r.status !== 'CANCELLED' && r.status !== 'PAYMENT_FAILED'
+        );
+        
+        if (activeReservations.length === 0) {
             container.innerHTML = `
                 <p class="info-message">
-                    Nie masz jeszcze żadnych rezerwacji. 
+                    Nie masz jeszcze żadnych aktywnych rezerwacji. 
                     <a href="/movies.html">Przejdź do filmów</a>, aby zarezerwować miejsca.
                 </p>
             `;
             return;
         }
         
-        container.innerHTML = reservations.map(reservation => {
-            const statusBadge = reservation.status === 'ACTIVE' 
-                ? '<span class="badge bg-success">Aktywna</span>'
-                : '<span class="badge bg-secondary">Anulowana</span>';
+        container.innerHTML = activeReservations.map(reservation => {
+            // Status badges dla różnych statusów
+            let statusBadge = '';
+            if (reservation.status === 'PAID') {
+                statusBadge = '<span class="badge bg-success">Opłacona</span>';
+            } else if (reservation.status === 'PENDING_PAYMENT') {
+                statusBadge = '<span class="badge bg-warning text-dark">Oczekuje na płatność</span>';
+            } else {
+                statusBadge = '<span class="badge bg-info">' + reservation.status + '</span>';
+            }
             
             const seatsList = reservation.seats.map(seat => 
                 `Rząd ${seat.rowNumber}, Miejsce ${seat.seatNumber} (${getTicketTypeName(seat.ticketType)})`
             ).join(', ');
             
-            const cancelButton = reservation.status === 'ACTIVE' 
-                ? `<button class="btn btn-sm btn-danger" onclick="cancelReservation(${reservation.id})">
-                    <i class="bi bi-x-circle"></i> Anuluj
-                   </button>`
-                : '';
+            // Przycisk anulowania tylko dla PENDING_PAYMENT
+            // Przycisk płatności dla PENDING_PAYMENT
+            let actionButtons = '';
+            if (reservation.status === 'PENDING_PAYMENT') {
+                actionButtons = `
+                    <a href="/payment.html?reservationId=${reservation.id}" class="btn btn-sm btn-primary me-2">
+                        <i class="bi bi-credit-card"></i> Zapłać
+                    </a>
+                    <button class="btn btn-sm btn-danger" onclick="cancelReservation(${reservation.id})">
+                        <i class="bi bi-x-circle"></i> Anuluj
+                    </button>
+                `;
+            } else if (reservation.status === 'PAID') {
+                actionButtons = `
+                    <button class="btn btn-sm btn-danger" onclick="cancelReservation(${reservation.id})">
+                        <i class="bi bi-x-circle"></i> Anuluj
+                    </button>
+                `;
+            }
             
             return `
                 <div class="reservation-card" style="background: white; padding: 20px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--secondary);">
@@ -83,6 +108,8 @@ async function loadReservations() {
                     <div style="margin-bottom: 15px;">
                         <p><strong>Miejsca:</strong> ${seatsList}</p>
                         <p><strong>Całkowita cena:</strong> <strong style="color: var(--primary); font-size: 1.2em;">${reservation.totalPrice.toFixed(2)} PLN</strong></p>
+                        ${reservation.paymentMethod ? `<p><strong>Metoda płatności:</strong> ${reservation.paymentMethod}</p>` : ''}
+                        ${reservation.paymentDate ? `<p><strong>Data płatności:</strong> ${formatDateTime(reservation.paymentDate)}</p>` : ''}
                     </div>
                     <div style="margin-bottom: 15px;">
                         <button class="btn btn-sm btn-info" onclick="showRoomOccupancy(${reservation.screeningId})" id="occupancyBtn-${reservation.screeningId}">
@@ -91,7 +118,7 @@ async function loadReservations() {
                         <div id="occupancy-${reservation.screeningId}" style="display: none; margin-top: 15px;"></div>
                     </div>
                     <div>
-                        ${cancelButton}
+                        ${actionButtons}
                     </div>
                 </div>
             `;

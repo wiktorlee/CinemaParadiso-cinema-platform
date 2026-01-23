@@ -274,8 +274,8 @@ document.getElementById('confirmReservationBtn').addEventListener('click', async
             body: JSON.stringify(reservationData)
         });
         
-        alert('Rezerwacja została utworzona pomyślnie!');
-        window.location.href = '/profile.html';
+        // Przekieruj do strony płatności
+        window.location.href = `/payment.html?reservationId=${result.id}`;
     } catch (error) {
         console.error('Error creating reservation:', error);
         alert('Wystąpił błąd podczas tworzenia rezerwacji: ' + (error.message || 'Nieznany błąd'));

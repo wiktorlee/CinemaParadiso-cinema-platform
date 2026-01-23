@@ -15,20 +15,24 @@ import java.util.List;
 public interface ReservationSeatRepository extends JpaRepository<ReservationSeat, Long> {
     
     /**
-     * Znajduje wszystkie zarezerwowane miejsca dla danego seansu (aktywne rezerwacje)
+     * Znajduje wszystkie zarezerwowane miejsca dla danego seansu
+     * Uwzględnia rezerwacje: PAID (opłacone) i PENDING_PAYMENT (oczekujące na płatność)
+     * Nie uwzględnia: CANCELLED, PAYMENT_FAILED
      */
     @Query("SELECT rs FROM ReservationSeat rs " +
            "WHERE rs.reservation.screening.id = :screeningId " +
-           "AND rs.reservation.status = 'ACTIVE'")
+           "AND rs.reservation.status IN ('PAID', 'PENDING_PAYMENT')")
     List<ReservationSeat> findReservedSeatsByScreeningId(@Param("screeningId") Long screeningId);
     
     /**
      * Sprawdza czy miejsce jest już zarezerwowane na dany seans
+     * Uwzględnia rezerwacje: PAID (opłacone) i PENDING_PAYMENT (oczekujące na płatność)
+     * Nie uwzględnia: CANCELLED, PAYMENT_FAILED
      */
     @Query("SELECT COUNT(rs) > 0 FROM ReservationSeat rs " +
            "WHERE rs.seat.id = :seatId " +
            "AND rs.reservation.screening.id = :screeningId " +
-           "AND rs.reservation.status = 'ACTIVE'")
+           "AND rs.reservation.status IN ('PAID', 'PENDING_PAYMENT')")
     boolean isSeatReservedForScreening(@Param("seatId") Long seatId, @Param("screeningId") Long screeningId);
 }
 
