@@ -5,7 +5,7 @@
 let currentPage = 0;
 let currentSearch = '';
 let currentGenre = '';
-let currentPageSize = 20;
+let currentPageSize = 12; // Zmniejszone z 20 na 12 dla szybszego ładowania
 
 document.addEventListener('DOMContentLoaded', async () => {
     const moviesContainer = document.getElementById('moviesContainer');
@@ -96,6 +96,9 @@ async function loadMovies() {
     const paginationContainer = document.getElementById('paginationContainer');
     const clearSearchBtn = document.getElementById('clearSearchBtn');
     
+    // Pokaż loader podczas ładowania
+    container.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Ładowanie...</span></div><p class="mt-2 text-muted">Ładowanie filmów...</p></div>';
+    
     try {
         // Buduj URL z parametrami
         let url = '/api/movies?page=' + currentPage + '&size=' + currentPageSize + '&sort=title,asc';
@@ -168,11 +171,11 @@ async function loadMovies() {
         // Zapisz filmy globalnie
         allMovies = movies;
         
-        // Wyświetl filmy
+        // Wyświetl filmy z lazy loading dla obrazów
         container.innerHTML = movies.map(movie => `
             <div class="movie-card" data-movie-id="${movie.id}" onclick="showMovieDetails(${movie.id})">
                 ${movie.posterPath ? 
-                    `<img src="${movie.posterPath}" alt="${movie.title}" class="movie-poster" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'movie-poster-placeholder\\'>${movie.title}</div>';">` :
+                    `<img src="${movie.posterPath}" alt="${movie.title}" class="movie-poster" loading="lazy" decoding="async" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'movie-poster-placeholder\\'>${movie.title}</div>';" onload="this.style.opacity='1';" style="opacity: 0; transition: opacity 0.3s;">` :
                     `<div class="movie-poster-placeholder">${movie.title}</div>`
                 }
                 <div class="movie-info">
@@ -259,7 +262,7 @@ window.showMovieDetails = async function(movieId) {
                 <div class="movie-modal-body">
                     <div class="movie-modal-poster">
                         ${movie.posterPath ? 
-                            `<img src="${movie.posterPath}" alt="${movie.title}" onerror="this.style.display='none';">` :
+                            `<img src="${movie.posterPath}" alt="${movie.title}" loading="eager" decoding="async" onerror="this.style.display='none';">` :
                             `<div class="movie-poster-placeholder-large">${movie.title}</div>`
                         }
                     </div>

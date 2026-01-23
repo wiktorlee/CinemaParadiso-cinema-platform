@@ -77,7 +77,7 @@ public class MovieController {
         
         // Utwórz Pageable z domyślnymi wartościami
         int pageNumber = page != null ? page : 0;
-        int pageSize = size != null ? size : 20;
+        int pageSize = size != null ? size : 12; // Zmniejszone z 20 na 12 dla szybszego ładowania
         
         // Parsuj sortowanie (format: "field,direction" np. "title,asc")
         String[] sortParams = sort.split(",");
