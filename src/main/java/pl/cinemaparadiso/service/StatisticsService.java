@@ -28,6 +28,8 @@ public class StatisticsService {
     
     private final ReservationRepository reservationRepository;
     private final ReservationSeatRepository reservationSeatRepository;
+    private final pl.cinemaparadiso.repository.MovieRatingRepository movieRatingRepository;
+    private final pl.cinemaparadiso.repository.ReviewRepository reviewRepository;
     
     /**
      * Pobiera wszystkie statystyki
@@ -56,6 +58,11 @@ public class StatisticsService {
         // Statystyki z ostatnich 12 miesięcy (dla wykresu)
         stats.put("monthlyRevenue", getMonthlyRevenueForLastMonths(12));
         stats.put("monthlyReservations", getMonthlyReservationsForLastMonths(12));
+        
+        // Statystyki ocen i recenzji
+        stats.put("totalRatings", getTotalRatings());
+        stats.put("totalReviews", getTotalReviews());
+        stats.put("averageRating", getAverageRating());
         
         return stats;
     }
@@ -281,6 +288,37 @@ public class StatisticsService {
         }
         
         return monthlyReservations;
+    }
+    
+    /**
+     * Liczy wszystkie oceny w systemie
+     */
+    public long getTotalRatings() {
+        return movieRatingRepository.count();
+    }
+    
+    /**
+     * Liczy wszystkie recenzje w systemie
+     */
+    public long getTotalReviews() {
+        return reviewRepository.count();
+    }
+    
+    /**
+     * Oblicza średnią ocenę wszystkich filmów
+     */
+    public Double getAverageRating() {
+        // Pobierz wszystkie oceny i oblicz średnią
+        List<pl.cinemaparadiso.entity.MovieRating> allRatings = movieRatingRepository.findAll();
+        if (allRatings.isEmpty()) {
+            return null;
+        }
+        
+        double sum = allRatings.stream()
+                .mapToInt(pl.cinemaparadiso.entity.MovieRating::getRating)
+                .sum();
+        
+        return sum / allRatings.size();
     }
 }
 

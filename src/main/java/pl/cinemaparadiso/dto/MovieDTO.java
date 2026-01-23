@@ -28,6 +28,11 @@ public class MovieDTO {
     private LocalDate releaseDate;
     private Integer year;
     private String posterPath; // Ścieżka do okładki (np. "/images/movies/inception.jpg")
+    
+    // Statystyki ocen
+    private Double averageRating; // Średnia ocena (np. 4.5) - zaokrąglona do 1 miejsca po przecinku
+    private Long totalRatings;    // Liczba ocen (np. 123)
+    private Integer userRating;   // Ocena użytkownika (jeśli zalogowany, null jeśli nie ocenił)
 }
 
 

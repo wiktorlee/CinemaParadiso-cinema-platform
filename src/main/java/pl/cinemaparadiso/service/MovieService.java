@@ -3,7 +3,10 @@ package pl.cinemaparadiso.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.cinemaparadiso.dto.CreateMovieDTO;
@@ -32,6 +35,7 @@ import java.util.stream.Collectors;
 public class MovieService {
     
     private final MovieRepository movieRepository;
+    private final MovieRatingService ratingService;
     
     /**
      * Konwertuje encję Movie na DTO
@@ -40,6 +44,19 @@ public class MovieService {
      * @return MovieDTO
      */
     private MovieDTO toDTO(Movie movie) {
+        Long movieId = movie.getId();
+        
+        // Pobierz statystyki ocen
+        Double avgRating = ratingService.getAverageRating(movieId);
+        Long totalRatings = ratingService.getRatingCount(movieId);
+        java.util.Optional<Integer> userRating = ratingService.getUserRating(movieId);
+        
+        // Zaokrąglij średnią ocenę do 1 miejsca po przecinku
+        Double roundedAvgRating = null;
+        if (avgRating != null) {
+            roundedAvgRating = Math.round(avgRating * 10.0) / 10.0;
+        }
+        
         return MovieDTO.builder()
                 .id(movie.getId())
                 .title(movie.getTitle())
@@ -50,6 +67,9 @@ public class MovieService {
                 .releaseDate(movie.getReleaseDate())
                 .year(movie.getYear())
                 .posterPath(movie.getPosterPath())
+                .averageRating(roundedAvgRating)
+                .totalRatings(totalRatings)
+                .userRating(userRating.orElse(null))
                 .build();
     }
     
@@ -253,6 +273,90 @@ public class MovieService {
         log.info("Okładka zaktualizowana: ID={}, nowa ścieżka={}", id, posterPath);
         
         return new UpdatePosterResult(toDTO(updatedMovie), oldPosterPath);
+    }
+    
+    /**
+     * Pobiera najpopularniejsze filmy (sortowane po średniej ocenie)
+     * 
+     * @param limit - maksymalna liczba filmów do zwrócenia
+     * @return lista najpopularniejszych filmów jako DTO
+     */
+    @Transactional(readOnly = true)
+    public List<MovieDTO> getMostPopularMovies(int limit) {
+        log.debug("Pobieranie {} najpopularniejszych filmów", limit);
+        Pageable pageable = PageRequest.of(0, limit);
+        return movieRepository.findMostPopularMovies(pageable).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Pobiera najnowsze premiery (sortowane po dacie premiery, najnowsze najpierw)
+     * 
+     * @param limit - maksymalna liczba filmów do zwrócenia
+     * @return lista najnowszych premier jako DTO
+     */
+    @Transactional(readOnly = true)
+    public List<MovieDTO> getLatestReleases(int limit) {
+        log.debug("Pobieranie {} najnowszych premier", limit);
+        Pageable pageable = PageRequest.of(0, limit);
+        return movieRepository.findLatestReleases(pageable).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Pobiera filmy posortowane po średniej ocenie
+     * Wymaga pobrania wszystkich filmów i posortowania w pamięci (oceny są w osobnej tabeli)
+     * 
+     * @param page - numer strony
+     * @param size - rozmiar strony
+     * @param direction - kierunek sortowania (ASC/DESC)
+     * @param search - wyszukiwanie po tytule (opcjonalne)
+     * @param genre - filtrowanie po gatunku (opcjonalne)
+     * @return strona z filmami posortowanymi po ocenach
+     */
+    @Transactional(readOnly = true)
+    public Page<MovieDTO> getAllMoviesSortedByRating(int page, int size, Sort.Direction direction, String search, String genre) {
+        log.debug("Pobieranie filmów posortowanych po ocenach: page={}, size={}, direction={}", page, size, direction);
+        
+        // Pobierz wszystkie filmy (lub przefiltrowane)
+        List<Movie> allMovies;
+        if (search != null && !search.trim().isEmpty()) {
+            allMovies = movieRepository.findByTitleContainingIgnoreCase(search.trim());
+        } else if (genre != null && !genre.trim().isEmpty()) {
+            allMovies = movieRepository.findByGenre(genre.trim());
+        } else {
+            allMovies = movieRepository.findAll();
+        }
+        
+        // Konwertuj na DTO i posortuj po średniej ocenie
+        List<MovieDTO> sortedMovies = allMovies.stream()
+                .map(this::toDTO)
+                .sorted((m1, m2) -> {
+                    Double rating1 = m1.getAverageRating() != null ? m1.getAverageRating() : 0.0;
+                    Double rating2 = m2.getAverageRating() != null ? m2.getAverageRating() : 0.0;
+                    
+                    // Jeśli oceny są równe, sortuj po liczbie ocen (więcej ocen = wyżej)
+                    int comparison = rating1.compareTo(rating2);
+                    if (comparison == 0) {
+                        Long count1 = m1.getTotalRatings() != null ? m1.getTotalRatings() : 0L;
+                        Long count2 = m2.getTotalRatings() != null ? m2.getTotalRatings() : 0L;
+                        comparison = count1.compareTo(count2);
+                    }
+                    
+                    return direction == Sort.Direction.DESC ? -comparison : comparison;
+                })
+                .collect(Collectors.toList());
+        
+        // Zastosuj paginację
+        int start = page * size;
+        int end = Math.min(start + size, sortedMovies.size());
+        List<MovieDTO> pageContent = start < sortedMovies.size() 
+                ? sortedMovies.subList(start, end) 
+                : List.of();
+        
+        return new PageImpl<>(pageContent, PageRequest.of(page, size), sortedMovies.size());
     }
     
     /**

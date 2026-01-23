@@ -15,8 +15,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.cinemaparadiso.dto.CreateMovieDTO;
 import pl.cinemaparadiso.dto.MovieDTO;
+import pl.cinemaparadiso.dto.MovieRatingDTO;
+import pl.cinemaparadiso.dto.RateMovieDTO;
+import pl.cinemaparadiso.dto.CreateReviewDTO;
+import pl.cinemaparadiso.dto.ReviewDTO;
 import pl.cinemaparadiso.dto.UpdateMovieDTO;
 import pl.cinemaparadiso.service.MovieService;
+import pl.cinemaparadiso.service.MovieRatingService;
+import pl.cinemaparadiso.service.ReviewService;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,6 +49,8 @@ import java.util.UUID;
 public class MovieController {
     
     private final MovieService movieService;
+    private final MovieRatingService ratingService;
+    private final ReviewService reviewService;
     
     // Ścieżka do folderu z okładkami filmów
     private static final String POSTER_UPLOAD_DIR = "src/main/resources/static/images/movies/";
@@ -86,21 +94,28 @@ public class MovieController {
                 ? Sort.Direction.DESC 
                 : Sort.Direction.ASC;
         
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(direction, sortField));
-        
         Page<MovieDTO> moviesPage;
         
-        // Wyszukiwanie po tytule
-        if (search != null && !search.trim().isEmpty()) {
-            moviesPage = movieService.searchMoviesByTitle(search.trim(), pageable);
-        }
-        // Filtrowanie po gatunku
-        else if (genre != null && !genre.trim().isEmpty()) {
-            moviesPage = movieService.searchMoviesByGenre(genre.trim(), pageable);
-        }
-        // Wszystkie filmy z paginacją
-        else {
-            moviesPage = movieService.getAllMovies(pageable);
+        // Sortowanie po ocenach wymaga specjalnej obsługi (oceny są w osobnej tabeli)
+        if ("rating".equalsIgnoreCase(sortField)) {
+            // Użyj specjalnej metody do sortowania po ocenach
+            moviesPage = movieService.getAllMoviesSortedByRating(pageNumber, pageSize, direction, search, genre);
+        } else {
+            // Standardowe sortowanie
+            Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(direction, sortField));
+            
+            // Wyszukiwanie po tytule
+            if (search != null && !search.trim().isEmpty()) {
+                moviesPage = movieService.searchMoviesByTitle(search.trim(), pageable);
+            }
+            // Filtrowanie po gatunku
+            else if (genre != null && !genre.trim().isEmpty()) {
+                moviesPage = movieService.searchMoviesByGenre(genre.trim(), pageable);
+            }
+            // Wszystkie filmy z paginacją
+            else {
+                moviesPage = movieService.getAllMovies(pageable);
+            }
         }
         
         // Zwróć odpowiedź z metadanymi paginacji
@@ -276,6 +291,131 @@ public class MovieController {
             log.error("Błąd podczas uploadu okładki dla filmu ID: {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+    
+    /**
+     * Ocenia film (lub aktualizuje istniejącą ocenę)
+     * 
+     * POST /api/movies/{id}/rate
+     * Wymaga zalogowania
+     * 
+     * @param id - ID filmu
+     * @param dto - ocena (1-5 gwiazdek)
+     * @return ocena
+     */
+    @PostMapping("/{id}/rate")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<MovieRatingDTO> rateMovie(
+            @PathVariable Long id,
+            @Valid @RequestBody RateMovieDTO dto) {
+        log.info("POST /api/movies/{}/rate - ocenianie filmu", id);
+        MovieRatingDTO rating = ratingService.rateMovie(id, dto);
+        return ResponseEntity.ok(rating);
+    }
+    
+    /**
+     * Pobiera ocenę użytkownika dla filmu
+     * 
+     * GET /api/movies/{id}/rating
+     * Wymaga zalogowania
+     * 
+     * @param id - ID filmu
+     * @return ocena użytkownika (null jeśli nie ocenił)
+     */
+    @GetMapping("/{id}/rating")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> getUserRating(@PathVariable Long id) {
+        log.info("GET /api/movies/{}/rating - pobieranie oceny użytkownika", id);
+        java.util.Optional<Integer> rating = ratingService.getUserRating(id);
+        Map<String, Object> response = new HashMap<>();
+        response.put("rating", rating.orElse(null));
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * Tworzy recenzję filmu (lub aktualizuje istniejącą)
+     * 
+     * POST /api/movies/{id}/reviews
+     * Wymaga zalogowania
+     * 
+     * @param id - ID filmu
+     * @param dto - treść recenzji
+     * @return recenzja
+     */
+    @PostMapping("/{id}/reviews")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ReviewDTO> createReview(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateReviewDTO dto) {
+        log.info("POST /api/movies/{}/reviews - tworzenie recenzji", id);
+        ReviewDTO review = reviewService.createReview(id, dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(review);
+    }
+    
+    /**
+     * Pobiera recenzje filmu z paginacją
+     * 
+     * GET /api/movies/{id}/reviews?page=0&size=10
+     * Publiczne (nie wymaga logowania)
+     * 
+     * @param id - ID filmu
+     * @param page - numer strony (domyślnie 0)
+     * @param size - rozmiar strony (domyślnie 10)
+     * @return strona z recenzjami
+     */
+    @GetMapping("/{id}/reviews")
+    public ResponseEntity<Map<String, Object>> getMovieReviews(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        log.info("GET /api/movies/{}/reviews - pobieranie recenzji", id);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ReviewDTO> reviewsPage = reviewService.getMovieReviews(id, pageable);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", reviewsPage.getContent());
+        response.put("totalElements", reviewsPage.getTotalElements());
+        response.put("totalPages", reviewsPage.getTotalPages());
+        response.put("currentPage", reviewsPage.getNumber());
+        response.put("pageSize", reviewsPage.getSize());
+        response.put("hasNext", reviewsPage.hasNext());
+        response.put("hasPrevious", reviewsPage.hasPrevious());
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * Pobiera najpopularniejsze filmy (sortowane po średniej ocenie)
+     * 
+     * GET /api/movies/popular?limit=5
+     * Publiczne (nie wymaga logowania)
+     * 
+     * @param limit - maksymalna liczba filmów (domyślnie 5)
+     * @return lista najpopularniejszych filmów
+     */
+    @GetMapping("/popular")
+    public ResponseEntity<List<MovieDTO>> getMostPopularMovies(
+            @RequestParam(defaultValue = "5") int limit) {
+        log.info("GET /api/movies/popular - pobieranie {} najpopularniejszych filmów", limit);
+        List<MovieDTO> movies = movieService.getMostPopularMovies(limit);
+        return ResponseEntity.ok(movies);
+    }
+    
+    /**
+     * Pobiera najnowsze premiery (sortowane po dacie premiery, najnowsze najpierw)
+     * 
+     * GET /api/movies/latest?limit=5
+     * Publiczne (nie wymaga logowania)
+     * 
+     * @param limit - maksymalna liczba filmów (domyślnie 5)
+     * @return lista najnowszych premier
+     */
+    @GetMapping("/latest")
+    public ResponseEntity<List<MovieDTO>> getLatestReleases(
+            @RequestParam(defaultValue = "5") int limit) {
+        log.info("GET /api/movies/latest - pobieranie {} najnowszych premier", limit);
+        List<MovieDTO> movies = movieService.getLatestReleases(limit);
+        return ResponseEntity.ok(movies);
     }
 }
 

@@ -3,11 +3,11 @@ package pl.cinemaparadiso.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import pl.cinemaparadiso.entity.Movie;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Repository dla encji Movie
@@ -69,5 +69,37 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
      * @return true jeśli film istnieje, false w przeciwnym razie
      */
     boolean existsByTitle(String title);
+    
+    /**
+     * Pobiera najnowsze premiery (sortowane po dacie premiery, najnowsze najpierw)
+     * 
+     * @param pageable - parametry paginacji
+     * @return strona z filmami
+     */
+    Page<Movie> findByReleaseDateIsNotNullOrderByReleaseDateDesc(Pageable pageable);
+    
+    /**
+     * Pobiera najnowsze premiery (bez paginacji, limit)
+     * Używa Pageable z limitem
+     * 
+     * @param pageable - parametry paginacji (użyj PageRequest.of(0, limit))
+     * @return lista filmów
+     */
+    @Query("SELECT m FROM Movie m WHERE m.releaseDate IS NOT NULL ORDER BY m.releaseDate DESC")
+    List<Movie> findLatestReleases(Pageable pageable);
+    
+    /**
+     * Pobiera najpopularniejsze filmy (sortowane po średniej ocenie, najwyższe najpierw)
+     * Uwzględnia tylko filmy, które mają co najmniej jedną ocenę
+     * 
+     * @param pageable - parametry paginacji (użyj PageRequest.of(0, limit))
+     * @return lista filmów
+     */
+    @Query("SELECT m FROM Movie m " +
+           "LEFT JOIN MovieRating mr ON mr.movie.id = m.id " +
+           "GROUP BY m.id " +
+           "HAVING COUNT(mr.id) > 0 " +
+           "ORDER BY AVG(mr.rating) DESC, COUNT(mr.id) DESC")
+    List<Movie> findMostPopularMovies(Pageable pageable);
 }
 

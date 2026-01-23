@@ -5,6 +5,7 @@
 let currentPage = 0;
 let currentSearch = '';
 let currentGenre = '';
+let currentSort = 'title,asc';
 let currentPageSize = 12; // Zmniejszone z 20 na 12 dla szybszego ładowania
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -16,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const searchForm = document.getElementById('searchForm');
     const searchInput = document.getElementById('searchInput');
     const genreFilter = document.getElementById('genreFilter');
+    const sortSelect = document.getElementById('sortSelect');
     const clearSearchBtn = document.getElementById('clearSearchBtn');
     
     // Sprawdź czy użytkownik jest zalogowany
@@ -72,12 +74,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadMovies();
     });
     
+    // Obsługa sortowania
+    if (sortSelect) {
+        sortSelect.addEventListener('change', () => {
+            currentSort = sortSelect.value;
+            currentPage = 0;
+            loadMovies();
+        });
+    }
+    
     // Obsługa przycisku wyczyść
     clearSearchBtn.addEventListener('click', () => {
         currentSearch = '';
         currentGenre = '';
         searchInput.value = '';
         genreFilter.value = '';
+        if (sortSelect) {
+            sortSelect.value = 'title,asc';
+            currentSort = 'title,asc';
+        }
         currentPage = 0;
         clearSearchBtn.style.display = 'none';
         loadMovies();
@@ -101,7 +116,7 @@ async function loadMovies() {
     
     try {
         // Buduj URL z parametrami
-        let url = '/api/movies?page=' + currentPage + '&size=' + currentPageSize + '&sort=title,asc';
+        let url = '/api/movies?page=' + currentPage + '&size=' + currentPageSize + '&sort=' + encodeURIComponent(currentSort);
         
         if (currentSearch) {
             url += '&search=' + encodeURIComponent(currentSearch);
@@ -180,6 +195,12 @@ async function loadMovies() {
                 }
                 <div class="movie-info">
                     <h3>${movie.title}</h3>
+                    ${movie.averageRating !== null && movie.averageRating !== undefined ? `
+                        <div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;">
+                            ${generateStars(movie.averageRating)}
+                            <small style="color: #666;">${movie.averageRating.toFixed(1)} (${movie.totalRatings || 0})</small>
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `).join('');
@@ -253,6 +274,15 @@ window.showMovieDetails = async function(movieId) {
             movie = await getMovieById(movieId);
         }
         
+        // Sprawdź czy użytkownik jest zalogowany
+        let isLoggedIn = false;
+        try {
+            await getCurrentUser();
+            isLoggedIn = true;
+        } catch (e) {
+            isLoggedIn = false;
+        }
+        
         // Utwórz modal
         const modal = document.createElement('div');
         modal.className = 'movie-modal';
@@ -274,6 +304,75 @@ window.showMovieDetails = async function(movieId) {
                         ${movie.year ? `<p><strong>Rok produkcji:</strong> ${movie.year}</p>` : ''}
                         ${movie.releaseDate ? `<p><strong>Data premiery:</strong> ${new Date(movie.releaseDate).toLocaleDateString('pl-PL')}</p>` : ''}
                         ${movie.description ? `<div class="movie-modal-description"><strong>Opis:</strong><p>${movie.description}</p></div>` : ''}
+                        
+                        <!-- Sekcja ocen -->
+                        ${movie.averageRating !== null && movie.averageRating !== undefined ? `
+                            <div class="movie-rating-section" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <strong>Ocena:</strong>
+                                        <div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;">
+                                            ${generateStars(movie.averageRating)}
+                                            <span style="font-size: 1.2em; font-weight: bold; margin-left: 10px;">
+                                                ${movie.averageRating.toFixed(1)}
+                                            </span>
+                                            <span style="color: #666; margin-left: 5px;">
+                                                (${movie.totalRatings || 0} ${movie.totalRatings === 1 ? 'ocena' : movie.totalRatings < 5 ? 'oceny' : 'ocen'})
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Sekcja oceniania (tylko dla zalogowanych) -->
+                                <div id="rating-section-${movieId}" style="margin-top: 15px;">
+                                    ${isLoggedIn ? (
+                                        movie.userRating ? `
+                                            <p>Twoja ocena: ${generateStars(movie.userRating)}</p>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="showRatingModal(${movieId}, ${movie.userRating})">
+                                                Zmień ocenę
+                                            </button>
+                                        ` : `
+                                            <button class="btn btn-sm btn-primary" onclick="showRatingModal(${movieId})">
+                                                <i class="bi bi-star"></i> Oceń ten film
+                                            </button>
+                                        `
+                                    ) : `
+                                        <small class="text-muted">Zaloguj się, aby ocenić ten film</small>
+                                    `}
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="movie-rating-section" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                <p>Ten film nie ma jeszcze ocen.</p>
+                                <div id="rating-section-${movieId}">
+                                    ${isLoggedIn ? `
+                                        <button class="btn btn-sm btn-primary" onclick="showRatingModal(${movieId})">
+                                            <i class="bi bi-star"></i> Oceń ten film
+                                        </button>
+                                    ` : `
+                                        <small class="text-muted">Zaloguj się, aby ocenić ten film</small>
+                                    `}
+                                </div>
+                            </div>
+                        `}
+                        
+                        <!-- Sekcja recenzji -->
+                        <div class="movie-reviews-section" id="reviews-section-${movieId}" style="margin: 20px 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h3>Recenzje</h3>
+                                ${isLoggedIn ? `
+                                    <button class="btn btn-sm btn-primary" onclick="showReviewForm(${movieId})" id="add-review-btn-${movieId}">
+                                        <i class="bi bi-pencil"></i> Napisz recenzję
+                                    </button>
+                                ` : `
+                                    <small class="text-muted">Zaloguj się, aby napisać recenzję</small>
+                                `}
+                            </div>
+                            <div id="reviews-list-${movieId}">
+                                <p class="info-message">Ładowanie recenzji...</p>
+                            </div>
+                        </div>
+                        
                         <div class="movie-modal-screenings" id="screenings-${movieId}">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                 <p><strong>Seanse:</strong></p>
@@ -292,6 +391,9 @@ window.showMovieDetails = async function(movieId) {
         
         // Załaduj seanse dla tego filmu
         loadScreeningsForMovie(movieId);
+        
+        // Załaduj recenzje
+        loadReviews(movieId);
         
         // Obsługa zamknięcia modala
         const closeBtn = modal.querySelector('.movie-modal-close');
@@ -398,5 +500,334 @@ window.refreshScreenings = function(movieId) {
             refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Odśwież';
         }
     });
+}
+
+/**
+ * Generuje HTML z gwiazdkami dla oceny
+ */
+function generateStars(rating) {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    let starsHTML = '';
+    
+    for (let i = 0; i < fullStars; i++) {
+        starsHTML += '<i class="bi bi-star-fill" style="color: #ffc107;"></i>';
+    }
+    if (hasHalfStar) {
+        starsHTML += '<i class="bi bi-star-half" style="color: #ffc107;"></i>';
+    }
+    const emptyStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < emptyStars; i++) {
+        starsHTML += '<i class="bi bi-star" style="color: #ddd;"></i>';
+    }
+    
+    return starsHTML;
+}
+
+/**
+ * Pokazuje modal do oceniania filmu
+ */
+window.showRatingModal = async function(movieId, currentRating = null) {
+    // Sprawdź czy użytkownik jest zalogowany
+    try {
+        await getCurrentUser();
+    } catch (error) {
+        alert('Musisz być zalogowany, aby ocenić film.');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'rating-modal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; width: 90%;">
+            <h3>Oceń ten film</h3>
+            <div id="stars-container" style="display: flex; gap: 10px; justify-content: center; margin: 20px 0; font-size: 2em;">
+                ${[1,2,3,4,5].map(i => `
+                    <i class="bi bi-star${currentRating && i <= currentRating ? '-fill' : ''}" 
+                       data-rating="${i}" 
+                       style="cursor: pointer; color: ${currentRating && i <= currentRating ? '#ffc107' : '#ddd'};"
+                       onmouseover="highlightStars(${i})"
+                       onmouseout="resetStars(${currentRating || 0})"
+                       onclick="submitRating(${movieId}, ${i})"></i>
+                `).join('')}
+            </div>
+            <p style="text-align: center; color: #666;">Wybierz liczbę gwiazdek (1-5)</p>
+            <button class="btn btn-secondary" onclick="this.closest('.rating-modal').remove()" style="width: 100%; margin-top: 10px;">Anuluj</button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Zamknij po kliknięciu poza modalem
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    };
+};
+
+/**
+ * Podświetla gwiazdki przy najechaniu
+ */
+window.highlightStars = function(rating) {
+    const stars = document.querySelectorAll('#stars-container i');
+    stars.forEach((star, index) => {
+        const starRating = index + 1;
+        if (starRating <= rating) {
+            star.className = 'bi bi-star-fill';
+            star.style.color = '#ffc107';
+        } else {
+            star.className = 'bi bi-star';
+            star.style.color = '#ddd';
+        }
+    });
+};
+
+/**
+ * Resetuje gwiazdki do poprzedniej wartości
+ */
+window.resetStars = function(currentRating) {
+    const stars = document.querySelectorAll('#stars-container i');
+    stars.forEach((star, index) => {
+        const starRating = index + 1;
+        if (starRating <= currentRating) {
+            star.className = 'bi bi-star-fill';
+            star.style.color = '#ffc107';
+        } else {
+            star.className = 'bi bi-star';
+            star.style.color = '#ddd';
+        }
+    });
+};
+
+/**
+ * Wysyła ocenę do API
+ */
+window.submitRating = async function(movieId, rating) {
+    try {
+        const response = await apiRequest(`/movies/${movieId}/rate`, {
+            method: 'POST',
+            body: JSON.stringify({ rating: rating })
+        });
+        
+        // Zamknij modal
+        document.querySelector('.rating-modal').remove();
+        
+        // Odśwież szczegóły filmu
+        const modal = document.querySelector('.movie-modal');
+        if (modal) {
+            modal.remove();
+            showMovieDetails(movieId);
+        }
+        
+        // Pokaż komunikat sukcesu
+        alert('Dziękujemy za ocenę!');
+        
+    } catch (error) {
+        console.error('Error submitting rating:', error);
+        if (error.message && error.message.includes('UNAUTHORIZED')) {
+            alert('Musisz być zalogowany, aby ocenić film.');
+        } else {
+            alert('Wystąpił błąd podczas zapisywania oceny.');
+        }
+    }
+};
+
+/**
+ * Pokazuje formularz do pisania recenzji
+ */
+window.showReviewForm = async function(movieId) {
+    // Sprawdź czy użytkownik jest zalogowany
+    try {
+        await getCurrentUser();
+    } catch (error) {
+        alert('Musisz być zalogowany, aby napisać recenzję.');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'review-modal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <h3>Napisz recenzję</h3>
+            <form id="review-form" onsubmit="submitReview(event, ${movieId})">
+                <div class="mb-3">
+                    <label for="review-content" class="form-label">Treść recenzji (min. 10 znaków)</label>
+                    <textarea id="review-content" class="form-control" rows="6" required minlength="10" maxlength="5000"></textarea>
+                    <small class="form-text text-muted">Maksymalnie 5000 znaków</small>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary">Opublikuj recenzję</button>
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.review-modal').remove()">Anuluj</button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Zamknij po kliknięciu poza modalem
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    };
+};
+
+/**
+ * Wysyła recenzję do API
+ */
+window.submitReview = async function(event, movieId) {
+    event.preventDefault();
+    
+    const content = document.getElementById('review-content').value.trim();
+    
+    if (content.length < 10) {
+        alert('Recenzja musi mieć co najmniej 10 znaków.');
+        return;
+    }
+    
+    try {
+        await apiRequest(`/movies/${movieId}/reviews`, {
+            method: 'POST',
+            body: JSON.stringify({ content: content })
+        });
+        
+        // Zamknij modal
+        document.querySelector('.review-modal').remove();
+        
+        // Odśwież listę recenzji
+        loadReviews(movieId);
+        
+        alert('Recenzja została opublikowana!');
+        
+    } catch (error) {
+        console.error('Error submitting review:', error);
+        if (error.message && error.message.includes('UNAUTHORIZED')) {
+            alert('Musisz być zalogowany, aby napisać recenzję.');
+        } else {
+            alert('Wystąpił błąd podczas publikowania recenzji.');
+        }
+    }
+};
+
+/**
+ * Ładuje recenzje dla filmu
+ */
+async function loadReviews(movieId, page = 0) {
+    const container = document.getElementById(`reviews-list-${movieId}`);
+    if (!container) return;
+    
+    try {
+        const response = await apiRequest(`/movies/${movieId}/reviews?page=${page}&size=10`, {
+            method: 'GET'
+        });
+        
+        const reviews = response.content || [];
+        const totalElements = response.totalElements || 0;
+        
+        if (reviews.length === 0) {
+            container.innerHTML = '<p class="info-message">Ten film nie ma jeszcze recenzji. Bądź pierwszy!</p>';
+            return;
+        }
+        
+        // Sprawdź czy użytkownik jest zalogowany
+        let currentUser = null;
+        try {
+            currentUser = await getCurrentUser();
+        } catch (e) {
+            // Użytkownik nie jest zalogowany
+        }
+        
+        // Sprawdź czy przycisk "Napisz recenzję" powinien być widoczny
+        const addReviewBtn = document.getElementById(`add-review-btn-${movieId}`);
+        if (addReviewBtn && !currentUser) {
+            addReviewBtn.style.display = 'none';
+        }
+        
+        container.innerHTML = `
+            <div class="reviews-list">
+                ${reviews.map(review => `
+                    <div class="review-item" style="padding: 15px; margin: 10px 0; background: white; border-radius: 8px; border-left: 4px solid #007bff;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <strong>${review.firstName} ${review.lastName}</strong>
+                                <small class="text-muted" style="display: block;">
+                                    ${new Date(review.createdAt).toLocaleDateString('pl-PL', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                    ${review.updatedAt !== review.createdAt ? '(edytowana)' : ''}
+                                </small>
+                            </div>
+                            ${review.isOwnReview ? `
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteReview(${review.id}, ${movieId})">
+                                    <i class="bi bi-trash"></i> Usuń
+                                </button>
+                            ` : ''}
+                        </div>
+                        <p style="white-space: pre-wrap; margin: 0;">${escapeHtml(review.content)}</p>
+                    </div>
+                `).join('')}
+            </div>
+            ${totalElements > 10 && reviews.length < totalElements ? `
+                <div style="text-align: center; margin-top: 15px;">
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadMoreReviews(${movieId}, ${page + 1})">
+                        Załaduj więcej recenzji
+                    </button>
+                </div>
+            ` : ''}
+        `;
+        
+    } catch (error) {
+        console.error('Error loading reviews:', error);
+        container.innerHTML = '<p class="error-message">Nie udało się załadować recenzji.</p>';
+    }
+}
+
+/**
+ * Usuwa recenzję
+ */
+window.deleteReview = async function(reviewId, movieId) {
+    if (!confirm('Czy na pewno chcesz usunąć tę recenzję?')) {
+        return;
+    }
+    
+    try {
+        await apiRequest(`/reviews/${reviewId}`, {
+            method: 'DELETE'
+        });
+        
+        // Odśwież listę recenzji
+        loadReviews(movieId);
+        alert('Recenzja została usunięta.');
+        
+    } catch (error) {
+        console.error('Error deleting review:', error);
+        alert('Wystąpił błąd podczas usuwania recenzji.');
+    }
+};
+
+/**
+ * Ładuje więcej recenzji
+ */
+window.loadMoreReviews = function(movieId, page) {
+    loadReviews(movieId, page);
+};
+
+/**
+ * Escapuje HTML w tekście (zabezpieczenie przed XSS)
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 

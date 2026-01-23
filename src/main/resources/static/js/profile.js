@@ -368,29 +368,146 @@ function setupChangePasswordForm() {
 
 /**
  * Ładuje recenzje użytkownika
- * Na razie wyświetla placeholder - będzie zaimplementowane później
  */
-async function loadReviews() {
+async function loadReviews(page = 0) {
     const container = document.getElementById('reviewsContainer');
     
     try {
-        // TODO: Stworzyć endpoint /api/reviews/my
-        // const reviews = await apiRequest('/reviews/my', { method: 'GET' });
+        const response = await apiRequest(`/reviews/my?page=${page}&size=10`, { 
+            method: 'GET' 
+        });
         
-        // Placeholder - na razie nie ma jeszcze endpointu
+        const reviews = response.content || [];
+        const totalElements = response.totalElements || 0;
+        const totalPages = response.totalPages || 1;
+        const hasNext = response.hasNext || false;
+        const hasPrevious = response.hasPrevious || false;
+        
+        if (reviews.length === 0) {
+            container.innerHTML = `
+                <p class="info-message">
+                    Nie napisałeś jeszcze żadnych recenzji. 
+                    <a href="/movies.html">Przejdź do filmów</a>, aby napisać pierwszą recenzję.
+                </p>
+            `;
+            return;
+        }
+        
+        // Pobierz informacje o filmach dla każdej recenzji
+        const reviewsWithMovies = await Promise.all(reviews.map(async (review) => {
+            try {
+                const movie = await apiRequest(`/movies/${review.movieId}`, { method: 'GET' });
+                return { ...review, movieTitle: movie.title, moviePoster: movie.posterPath };
+            } catch (e) {
+                return { ...review, movieTitle: `Film #${review.movieId}`, moviePoster: null };
+            }
+        }));
+        
         container.innerHTML = `
-            <p class="info-message">
-                Funkcja recenzji będzie dostępna wkrótce. 
-                Tutaj zobaczysz wszystkie swoje recenzje filmów.
-            </p>
+            <div class="reviews-list">
+                ${reviewsWithMovies.map(review => `
+                    <div class="review-card" style="background: white; padding: 20px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--secondary);">
+                        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                            ${review.moviePoster ? `
+                                <img src="${review.moviePoster}" alt="${review.movieTitle}" 
+                                     style="width: 80px; height: 120px; object-fit: cover; border-radius: 5px;">
+                            ` : `
+                                <div style="width: 80px; height: 120px; background: var(--light); border-radius: 5px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10px; padding: 5px;">
+                                    ${review.movieTitle}
+                                </div>
+                            `}
+                            <div style="flex: 1;">
+                                <h4 style="margin: 0 0 10px 0;">
+                                    <a href="/movies.html" onclick="event.preventDefault(); showMovieDetailsFromProfile(${review.movieId}); return false;" 
+                                       style="color: var(--primary); text-decoration: none;">
+                                        ${review.movieTitle}
+                                    </a>
+                                </h4>
+                                <small class="text-muted">
+                                    Napisano: ${formatDateTime(review.createdAt)}
+                                    ${review.updatedAt !== review.createdAt ? ' (edytowana)' : ''}
+                                </small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteReviewFromProfile(${review.id})">
+                                    <i class="bi bi-trash"></i> Usuń
+                                </button>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <p style="white-space: pre-wrap; margin: 0;">${escapeHtml(review.content)}</p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            ${totalPages > 1 ? `
+                <div class="pagination-container" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px; align-items: center;">
+                    ${hasPrevious ? `
+                        <button class="btn btn-sm btn-outline-primary" onclick="loadReviews(${page - 1})">
+                            ‹ Poprzednia
+                        </button>
+                    ` : `
+                        <button class="btn btn-sm btn-outline-primary" disabled>‹ Poprzednia</button>
+                    `}
+                    <span>Strona ${page + 1} z ${totalPages}</span>
+                    ${hasNext ? `
+                        <button class="btn btn-sm btn-outline-primary" onclick="loadReviews(${page + 1})">
+                            Następna ›
+                        </button>
+                    ` : `
+                        <button class="btn btn-sm btn-outline-primary" disabled>Następna ›</button>
+                    `}
+                </div>
+            ` : ''}
         `;
+        
     } catch (error) {
         console.error('Error loading reviews:', error);
         container.innerHTML = `
             <p class="error-message">
-                Wystąpił błąd podczas ładowania recenzji.
+                Wystąpił błąd podczas ładowania recenzji: ${error.message || 'Nieznany błąd'}
             </p>
         `;
     }
+}
+
+/**
+ * Usuwa recenzję z profilu
+ */
+async function deleteReviewFromProfile(reviewId) {
+    if (!confirm('Czy na pewno chcesz usunąć tę recenzję?')) {
+        return;
+    }
+    
+    try {
+        await apiRequest(`/reviews/${reviewId}`, { method: 'DELETE' });
+        alert('Recenzja została usunięta.');
+        loadReviews(); // Odśwież listę
+    } catch (error) {
+        console.error('Error deleting review:', error);
+        alert('Wystąpił błąd podczas usuwania recenzji: ' + (error.message || 'Nieznany błąd'));
+    }
+}
+
+/**
+ * Pokazuje szczegóły filmu z profilu (otwiera modal)
+ */
+window.showMovieDetailsFromProfile = function(movieId) {
+    // Użyj funkcji z movies.js jeśli jest dostępna
+    if (typeof showMovieDetails === 'function') {
+        showMovieDetails(movieId);
+    } else {
+        // Jeśli nie ma funkcji, przekieruj do strony filmów
+        window.location.href = '/movies.html';
+    }
+};
+
+/**
+ * Escapuje HTML w tekście (zabezpieczenie przed XSS)
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 

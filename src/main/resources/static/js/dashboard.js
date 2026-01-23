@@ -84,6 +84,26 @@ function updateStatisticsCards(stats) {
     if (totalReservedSeatsEl && stats.totalReservedSeats !== undefined) {
         totalReservedSeatsEl.textContent = stats.totalReservedSeats;
     }
+    
+    // Wszystkie oceny
+    const totalRatingsEl = document.getElementById('totalRatings');
+    if (totalRatingsEl && stats.totalRatings !== undefined) {
+        totalRatingsEl.textContent = stats.totalRatings;
+    }
+    
+    // Wszystkie recenzje
+    const totalReviewsEl = document.getElementById('totalReviews');
+    if (totalReviewsEl && stats.totalReviews !== undefined) {
+        totalReviewsEl.textContent = stats.totalReviews;
+    }
+    
+    // Średnia ocena
+    const averageRatingEl = document.getElementById('averageRating');
+    if (averageRatingEl && stats.averageRating !== undefined && stats.averageRating !== null) {
+        averageRatingEl.textContent = stats.averageRating.toFixed(1) + ' / 5.0';
+    } else if (averageRatingEl) {
+        averageRatingEl.textContent = 'Brak danych';
+    }
 }
 
 /**
@@ -118,8 +138,10 @@ function drawDailyRevenueChart(dailyRevenue) {
     const ctx = document.getElementById('dailyRevenueChart');
     if (!ctx) return;
     
-    const labels = Object.keys(dailyRevenue).map(date => formatDate(date));
-    const data = Object.values(dailyRevenue).map(val => parseFloat(val));
+    // Sortuj klucze chronologicznie
+    const sortedKeys = Object.keys(dailyRevenue).sort();
+    const labels = sortedKeys.map(date => formatDate(date));
+    const data = sortedKeys.map(key => parseFloat(dailyRevenue[key]));
     
     if (dailyRevenueChart) {
         dailyRevenueChart.destroy();
@@ -224,8 +246,10 @@ function drawMonthlyRevenueChart(monthlyRevenue) {
     const ctx = document.getElementById('monthlyRevenueChart');
     if (!ctx) return;
     
-    const labels = Object.keys(monthlyRevenue).map(month => formatMonth(month));
-    const data = Object.values(monthlyRevenue).map(val => parseFloat(val));
+    // Sortuj klucze chronologicznie
+    const sortedKeys = Object.keys(monthlyRevenue).sort();
+    const labels = sortedKeys.map(month => formatMonth(month));
+    const data = sortedKeys.map(key => parseFloat(monthlyRevenue[key]));
     
     if (monthlyRevenueChart) {
         monthlyRevenueChart.destroy();
@@ -272,8 +296,10 @@ function drawDailyReservationsChart(dailyReservations) {
     const ctx = document.getElementById('dailyReservationsChart');
     if (!ctx) return;
     
-    const labels = Object.keys(dailyReservations).map(date => formatDate(date));
-    const data = Object.values(dailyReservations).map(val => parseInt(val));
+    // Sortuj klucze chronologicznie
+    const sortedKeys = Object.keys(dailyReservations).sort();
+    const labels = sortedKeys.map(date => formatDate(date));
+    const data = sortedKeys.map(key => parseInt(dailyReservations[key]));
     
     if (dailyReservationsChart) {
         dailyReservationsChart.destroy();
@@ -326,22 +352,24 @@ function formatCurrency(amount) {
 }
 
 /**
- * Formatuje datę
+ * Formatuje datę (YYYY-MM-DD -> DD.MM)
  */
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pl-PL', {
-        day: '2-digit',
-        month: '2-digit'
-    });
+    // dateString jest w formacie "YYYY-MM-DD"
+    const [year, month, day] = dateString.split('-');
+    return `${day}.${month}`;
 }
 
 /**
  * Formatuje miesiąc (YYYY-MM -> MM/YYYY)
+ * Dodatkowo sortuje klucze, żeby były w odpowiedniej kolejności
  */
 function formatMonth(monthString) {
     const [year, month] = monthString.split('-');
-    return `${month}/${year}`;
+    // Formatuj jako "MM/YYYY" dla lepszej czytelności
+    const monthNames = ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru'];
+    const monthIndex = parseInt(month) - 1;
+    return `${monthNames[monthIndex]} ${year}`;
 }
 
 /**

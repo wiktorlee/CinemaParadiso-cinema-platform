@@ -54,6 +54,8 @@ public class AuditService {
             addAuditLogsForEntity("screenings", "screenings_aud", "Seans", rev, revision, logs);
             addAuditLogsForEntity("reservations", "reservations_aud", "Rezerwacja", rev, revision, logs);
             addAuditLogsForEntity("users", "users_aud", "Użytkownik", rev, revision, logs);
+            addAuditLogsForEntity("movie_ratings", "movie_ratings_aud", "Ocena filmu", rev, revision, logs);
+            addAuditLogsForEntity("reviews", "reviews_aud", "Recenzja", rev, revision, logs);
         }
         
         // Sortuj po czasie (najnowsze pierwsze)
@@ -138,6 +140,31 @@ public class AuditService {
                 case "users":
                     query = "SELECT username FROM users WHERE id = :id";
                     break;
+                case "movie_ratings":
+                    // Pobierz tytuł filmu i ocenę
+                    query = "SELECT m.title, mr.rating FROM movie_ratings mr " +
+                            "JOIN movies m ON mr.movie_id = m.id WHERE mr.id = :id";
+                    @SuppressWarnings("unchecked")
+                    List<Object[]> ratingResults = entityManager.createNativeQuery(query)
+                            .setParameter("id", entityId)
+                            .getResultList();
+                    if (!ratingResults.isEmpty()) {
+                        Object[] row = ratingResults.get(0);
+                        return row[0] + " (" + row[1] + " gwiazdek)";
+                    }
+                    return "Ocena #" + entityId;
+                case "reviews":
+                    // Pobierz tytuł filmu
+                    query = "SELECT m.title FROM reviews r " +
+                            "JOIN movies m ON r.movie_id = m.id WHERE r.id = :id";
+                    @SuppressWarnings("unchecked")
+                    List<Object> reviewResults = entityManager.createNativeQuery(query)
+                            .setParameter("id", entityId)
+                            .getResultList();
+                    if (!reviewResults.isEmpty()) {
+                        return reviewResults.get(0).toString();
+                    }
+                    return "Recenzja #" + entityId;
                 default:
                     return tableName + " #" + entityId;
             }
