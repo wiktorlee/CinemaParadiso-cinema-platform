@@ -14,15 +14,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Encja reprezentująca rezerwację
- * 
- * Jedna rezerwacja może zawierać wiele miejsc (ReservationSeat)
- * Przykład: Użytkownik rezerwuje 3 miejsca na jeden seans
- */
 @Entity
 @Table(name = "reservations")
-@Audited  // Hibernate Envers - audit trail dla tej encji
+@Audited
 @Data
 @Builder
 @NoArgsConstructor
@@ -33,91 +27,47 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * @ManyToOne - wiele rezerwacji może należeć do jednego użytkownika
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    /**
-     * @ManyToOne - wiele rezerwacji może być dla jednego seansu
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "screening_id", nullable = false)
     private Screening screening;
 
-    /**
-     * Data utworzenia rezerwacji
-     */
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    /**
-     * Status rezerwacji
-     */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
     private ReservationStatus status = ReservationStatus.PENDING_PAYMENT;
 
-    /**
-     * Metoda płatności (opcjonalne, ustawiane po płatności)
-     */
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method")
     private PaymentMethod paymentMethod;
 
-    /**
-     * Data płatności (opcjonalne, ustawiane po płatności)
-     */
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
-    /**
-     * ID transakcji płatności (opcjonalne, ustawiane po płatności)
-     * Używane do identyfikacji płatności w systemie symulacji
-     */
     @Column(name = "payment_transaction_id")
     private String paymentTransactionId;
 
-    /**
-     * Wersja rekordu dla optymistycznego blokowania (optimistic locking)
-     * Hibernate automatycznie zwiększa tę wartość przy każdej aktualizacji
-     * Jeśli wersja się nie zgadza podczas zapisu, rzuca OptimisticLockException
-     * Zapobiega to równoczesnym modyfikacjom tego samego rekordu
-     */
     @Version
     @Column(nullable = false)
     @Builder.Default
     private Integer version = 0;
 
-    /**
-     * Unikalny token używany w kodzie QR biletu
-     * Generowany automatycznie po opłaceniu rezerwacji
-     * Używany do weryfikacji biletu przy wejściu do kina
-     */
     @Column(name = "qr_code_token", unique = true)
     private String qrCodeToken;
 
-    /**
-     * Data i godzina wygenerowania kodu QR
-     * Ustawiana automatycznie przy pierwszym wygenerowaniu QR
-     */
     @Column(name = "qr_code_generated_at")
     private LocalDateTime qrCodeGeneratedAt;
 
-    /**
-     * @OneToMany - jedna rezerwacja może zawierać wiele miejsc
-     * cascade = CascadeType.ALL - operacje na rezerwacji wpływają na miejsca
-     */
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ReservationSeat> reservationSeats = new ArrayList<>();
 
-    /**
-     * Metoda pomocnicza do obliczania całkowitej ceny rezerwacji
-     */
     public BigDecimal getTotalPrice() {
         return reservationSeats.stream()
                 .map(ReservationSeat::getPrice)

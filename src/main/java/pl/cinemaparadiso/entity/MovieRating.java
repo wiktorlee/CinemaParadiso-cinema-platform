@@ -11,10 +11,6 @@ import org.hibernate.envers.Audited;
 
 import java.time.LocalDateTime;
 
-/**
- * Encja reprezentująca ocenę filmu przez użytkownika
- * Jeden użytkownik może ocenić jeden film tylko raz (unikalność na poziomie bazy)
- */
 @Entity
 @Table(name = "movie_ratings", 
        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "movie_id"}))
@@ -40,7 +36,7 @@ public class MovieRating {
     @Column(nullable = false)
     @Min(1)
     @Max(5)
-    private Integer rating; // 1-5 gwiazdek
+    private Integer rating;
     
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

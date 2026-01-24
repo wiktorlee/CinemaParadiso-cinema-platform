@@ -1,4 +1,3 @@
--- Tabela seansów
 CREATE TABLE screenings (
     id BIGSERIAL PRIMARY KEY,
     movie_id BIGINT NOT NULL,
@@ -12,7 +11,6 @@ CREATE TABLE screenings (
     CONSTRAINT fk_screenings_schedule FOREIGN KEY (schedule_id) REFERENCES screening_schedules(id) ON DELETE SET NULL
 );
 
--- Indeksy dla szybszego wyszukiwania
 CREATE INDEX idx_screenings_movie_id ON screenings(movie_id);
 CREATE INDEX idx_screenings_room_id ON screenings(room_id);
 CREATE INDEX idx_screenings_start_time ON screenings(start_time);

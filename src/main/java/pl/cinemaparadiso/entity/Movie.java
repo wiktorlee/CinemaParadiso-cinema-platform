@@ -11,15 +11,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Encja reprezentująca film w kinie
- * 
- * @Entity - encja JPA
- * @Table(name = "movies") - tabela "movies" w bazie danych
- */
 @Entity
 @Table(name = "movies")
-@Audited  // Hibernate Envers - audit trail dla tej encji
+@Audited
 @Data
 @Builder
 @NoArgsConstructor
@@ -36,40 +30,24 @@ public class Movie {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    private String genre; // Gatunek filmu (np. "Akcja", "Komedia", "Dramat")
+    private String genre;
 
-    private String director; // Reżyser
+    private String director;
 
     @Column(nullable = false)
-    private Integer durationMinutes; // Czas trwania w minutach
+    private Integer durationMinutes;
 
-    private LocalDate releaseDate; // Data premiery
+    private LocalDate releaseDate;
 
-    private Integer year; // Rok produkcji
+    private Integer year;
 
-    /**
-     * Ścieżka do pliku okładki filmu
-     * Przechowywana na dysku serwera, w bazie tylko ścieżka (np. "/images/movies/inception.jpg")
-     * null jeśli film nie ma okładki
-     */
     @Column(name = "poster_path")
     private String posterPath;
 
-    /**
-     * @OneToMany - jeden film może mieć wiele seansów
-     * mappedBy = "movie" - pole w klasie Screening, które wskazuje na ten film
-     * cascade = CascadeType.ALL - operacje na filmie wpływają na seanse
-     * orphanRemoval = true - jeśli usuniemy film, usuną się też seanse
-     * 
-     * List<Screening> - lista seansów dla tego filmu
-     */
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Screening> screenings = new ArrayList<>();
 
-    /**
-     * @OneToMany - jeden film może mieć wiele harmonogramów
-     */
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ScreeningSchedule> schedules = new ArrayList<>();

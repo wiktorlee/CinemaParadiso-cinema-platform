@@ -1,7 +1,3 @@
-/**
- * Skrypt dla strony płatności - wersja z kafelkami
- */
-
 let reservationData = null;
 let selectedPaymentMethod = null;
 
@@ -9,7 +5,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('Payment page: DOMContentLoaded');
     
     try {
-        // Sprawdź czy użytkownik jest zalogowany (z timeoutem)
         let user = null;
         try {
             const userPromise = getCurrentUser();
@@ -38,7 +33,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        // Pobierz ID rezerwacji z URL
         const urlParams = new URLSearchParams(window.location.search);
         const reservationId = urlParams.get('reservationId');
         
@@ -50,12 +44,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         console.log('Loading reservation data for ID:', reservationId);
         
-        // Załaduj dane rezerwacji
         await loadReservationData(reservationId);
         
         console.log('Reservation data loaded, initializing payment method selection');
         
-        // Inicjalizuj wybór metody płatności
         initializePaymentMethodSelection();
         
         console.log('Payment method selection initialized');
@@ -65,9 +57,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-/**
- * Ładuje dane rezerwacji
- */
 async function loadReservationData(reservationId) {
     try {
         reservationData = await apiRequest(`/reservations/${reservationId}`, { method: 'GET' });
@@ -76,7 +65,6 @@ async function loadReservationData(reservationId) {
             throw new Error('Brak danych rezerwacji w odpowiedzi');
         }
         
-        // Ustaw ID rezerwacji w formularzu
         const reservationIdInput = document.getElementById('reservationId');
         if (reservationIdInput) {
             reservationIdInput.value = reservationId;
@@ -87,15 +75,10 @@ async function loadReservationData(reservationId) {
     }
 }
 
-/**
- * Inicjalizuje wybór metody płatności
- */
 function initializePaymentMethodSelection() {
-    // Obsługa kliknięć w kafelki
     const pricingCards = document.querySelectorAll('.pricing-card');
     pricingCards.forEach(card => {
         card.addEventListener('click', (event) => {
-            // Jeśli kliknięto w przycisk, użyj jego data-method
             const button = event.target.closest('button[data-method]');
             const method = button ? button.getAttribute('data-method') : card.getAttribute('data-method');
             
@@ -105,7 +88,6 @@ function initializePaymentMethodSelection() {
         });
     });
     
-    // Obsługa przycisku powrotu
     const backButton = document.getElementById('backButton');
     if (backButton) {
         backButton.addEventListener('click', () => {
@@ -114,14 +96,10 @@ function initializePaymentMethodSelection() {
     }
 }
 
-/**
- * Wybiera metodę płatności i pokazuje panel podsumowania
- */
 function selectPaymentMethod(method) {
     console.log('Selected payment method:', method);
     selectedPaymentMethod = method;
     
-    // Ukryj wybór metody
     const methodSelection = document.getElementById('paymentMethodSelection');
     const summaryPanel = document.getElementById('paymentSummaryPanel');
     
@@ -131,20 +109,16 @@ function selectPaymentMethod(method) {
         summaryPanel.style.display = 'block';
     }
     
-    // Ustaw metodę w formularzu
     const methodInput = document.getElementById('selectedPaymentMethod');
     if (methodInput) methodInput.value = method;
     
-    // Dla gotówki - od razu potwierdź bez płatności
     if (method === 'CASH') {
         handleCashPayment();
         return;
     }
     
-    // Dla karty i BLIK - pokaż formularz
     showPaymentForm(method);
     
-    // Wyświetl podsumowanie
     displaySummary();
 }
 

@@ -1,6 +1,3 @@
--- V22__Insert_sample_reviews.sql
--- Dodanie przykładowych recenzji filmów
-
 DO $$
 DECLARE
     user_record RECORD;
@@ -32,7 +29,6 @@ DECLARE
     movie_count INTEGER;
     reviews_added INTEGER := 0;
 BEGIN
-    -- Sprawdź czy są użytkownicy i filmy
     SELECT COUNT(*) INTO user_count FROM users WHERE role = 'USER';
     SELECT COUNT(*) INTO movie_count FROM movies;
     
@@ -41,13 +37,10 @@ BEGIN
         RETURN;
     END IF;
     
-    -- Dla każdego użytkownika dodaj 1-3 recenzje
     FOR user_record IN SELECT id FROM users WHERE role = 'USER' ORDER BY id
     LOOP
-        -- Każdy użytkownik napisze 1-3 recenzje
         FOR i IN 1..(1 + floor(random() * 3)::INTEGER)
         LOOP
-            -- Wybierz losowy film, który użytkownik jeszcze nie zrecenzował
             SELECT m.id INTO random_movie_id
             FROM movies m
             WHERE NOT EXISTS (
@@ -57,9 +50,7 @@ BEGIN
             ORDER BY random()
             LIMIT 1;
             
-            -- Jeśli znaleziono film, dodaj recenzję
             IF random_movie_id IS NOT NULL THEN
-                -- Wybierz losowy tekst recenzji
                 review_text := review_texts[1 + floor(random() * array_length(review_texts, 1))::INTEGER];
                 
                 INSERT INTO reviews (user_id, movie_id, content, created_at, updated_at)

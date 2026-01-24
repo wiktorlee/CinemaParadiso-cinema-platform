@@ -1,17 +1,11 @@
-/**
- * Skrypt dla strony rezerwacji miejsc
- */
-
 let screeningData = null;
 let seatsData = [];
 let selectedSeats = new Map(); // Map<seatId, {seat, ticketType}>
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Sprawdź czy użytkownik jest zalogowany
     try {
         const user = await getCurrentUser();
     } catch (error) {
-        // Użytkownik nie jest zalogowany - przekieruj do logowania
         console.error('User not logged in:', error);
         modalService.alert(
             'Wymagane logowanie',
@@ -23,7 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
-    // Pobierz ID seansu z URL
     const urlParams = new URLSearchParams(window.location.search);
     const screeningId = urlParams.get('screeningId');
     
@@ -32,17 +25,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
-    // Załaduj dane seansu i miejsc
     await loadScreeningData(screeningId);
     await loadSeatsData(screeningId);
 });
 
-/**
- * Ładuje dane seansu
- */
 async function loadScreeningData(screeningId) {
     try {
-        // Pokaż loader podczas ładowania danych seansu
         loaderService.showFullScreen('Ładowanie danych seansu...');
         
         screeningData = await apiRequest(`/screenings/${screeningId}`, { method: 'GET' });
@@ -65,9 +53,6 @@ async function loadScreeningData(screeningId) {
     }
 }
 
-/**
- * Ładuje dane miejsc
- */
 async function loadSeatsData(screeningId) {
     try {
         seatsData = await apiRequest(`/reservations/screenings/${screeningId}/seats`, { method: 'GET' });
@@ -78,14 +63,10 @@ async function loadSeatsData(screeningId) {
     }
 }
 
-/**
- * Renderuje siatkę miejsc
- */
 function renderSeatGrid() {
     const seatGrid = document.getElementById('seatGrid');
     seatGrid.innerHTML = '';
     
-    // Grupuj miejsca po rzędach
     const seatsByRow = new Map();
     seatsData.forEach(seat => {
         if (!seatsByRow.has(seat.rowNumber)) {
@@ -94,21 +75,17 @@ function renderSeatGrid() {
         seatsByRow.get(seat.rowNumber).push(seat);
     });
     
-    // Sortuj rzędy
     const sortedRows = Array.from(seatsByRow.keys()).sort((a, b) => a - b);
     
-    // Renderuj każdy rząd
     sortedRows.forEach(rowNumber => {
         const rowDiv = document.createElement('div');
         rowDiv.className = 'seat-row';
         
-        // Etykieta rzędu
         const rowLabel = document.createElement('div');
         rowLabel.className = 'row-label';
         rowLabel.textContent = rowNumber;
         rowDiv.appendChild(rowLabel);
         
-        // Miejsca w rzędzie (posortowane po numerze miejsca)
         const seatsInRow = seatsByRow.get(rowNumber).sort((a, b) => a.seatNumber - b.seatNumber);
         
         seatsInRow.forEach(seat => {
@@ -116,7 +93,6 @@ function renderSeatGrid() {
             seatDiv.className = 'seat';
             seatDiv.dataset.seatId = seat.seatId;
             
-            // Dodaj klasy CSS w zależności od stanu miejsca
             if (!seat.isSeatEnabled) {
                 seatDiv.classList.add('disabled');
             } else if (!seat.isAvailable) {
@@ -137,16 +113,11 @@ function renderSeatGrid() {
     });
 }
 
-/**
- * Przełącza wybór miejsca
- */
 function toggleSeat(seat) {
     if (selectedSeats.has(seat.seatId)) {
-        // Usuń z wybranych
         selectedSeats.delete(seat.seatId);
         updateSeatVisualState(seat.seatId, false);
     } else {
-        // Dodaj do wybranych
         selectedSeats.set(seat.seatId, {
             seat: seat,
             ticketType: 'NORMAL' // Domyślnie normalny bilet

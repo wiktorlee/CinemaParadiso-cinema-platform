@@ -16,10 +16,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Serwis do zarządzania rezerwacjami
- * Zawiera logikę biznesową dla operacji na rezerwacjach
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -32,9 +28,6 @@ public class ReservationService {
     private final SeatRepository seatRepository;
     private final UserRepository userRepository;
     
-    /**
-     * Pobiera dostępne miejsca dla danego seansu
-     */
     @Transactional(readOnly = true)
     public List<SeatAvailabilityDTO> getAvailableSeats(Long screeningId) {
         log.debug("Pobieranie dostępnych miejsc dla seansu ID: {}", screeningId);
@@ -45,13 +38,11 @@ public class ReservationService {
         Room room = screening.getRoom();
         List<Seat> allSeats = seatRepository.findByRoomIdOrderByRowNumberAscSeatNumberAsc(room.getId());
         
-        // Pobierz wszystkie zarezerwowane miejsca dla tego seansu
         List<ReservationSeat> reservedSeats = reservationSeatRepository.findReservedSeatsByScreeningId(screeningId);
         Set<Long> reservedSeatIds = reservedSeats.stream()
                 .map(rs -> rs.getSeat().getId())
                 .collect(Collectors.toSet());
         
-        // Konwertuj miejsca na DTO z informacją o dostępności
         return allSeats.stream()
                 .map(seat -> SeatAvailabilityDTO.builder()
                         .seatId(seat.getId())
@@ -64,49 +55,36 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
     
-    /**
-     * Tworzy nową rezerwację
-     */
     public ReservationDTO createReservation(CreateReservationDTO createDTO, Long userId) {
         log.info("Tworzenie rezerwacji dla użytkownika ID: {}, seans ID: {}", userId, createDTO.getScreeningId());
         
-        // Sprawdź czy użytkownik istnieje
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Użytkownik o ID " + userId + " nie istnieje"));
         
-        // Sprawdź czy seans istnieje
         Screening screening = screeningRepository.findById(createDTO.getScreeningId())
                 .orElseThrow(() -> new ScreeningNotFoundException("Seans o ID " + createDTO.getScreeningId() + " nie istnieje"));
         
-        // Sprawdź czy seans nie jest w przeszłości
         if (screening.getStartTime().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("Nie można zarezerwować miejsc na seans, który już się rozpoczął");
         }
         
-        // Sprawdź dostępność miejsc i utwórz ReservationSeat
-        // Używamy pessimistic locking aby zapobiec race conditions
         List<ReservationSeat> reservationSeats = createDTO.getSeats().stream()
                 .map(seatSelection -> {
-                    // Pobierz miejsce z pessimistic lock (blokuje do końca transakcji)
                     Seat seat = seatRepository.findByIdWithLock(seatSelection.getSeatId())
                             .orElseThrow(() -> new IllegalArgumentException("Miejsce o ID " + seatSelection.getSeatId() + " nie istnieje"));
                     
-                    // Sprawdź czy miejsce należy do sali seansu
                     if (!seat.getRoom().getId().equals(screening.getRoom().getId())) {
                         throw new IllegalArgumentException("Miejsce o ID " + seatSelection.getSeatId() + " nie należy do sali seansu");
                     }
                     
-                    // Sprawdź czy miejsce jest włączone (nie uszkodzone)
                     if (!seat.getIsAvailable()) {
                         throw new SeatNotAvailableException("Miejsce o ID " + seatSelection.getSeatId() + " jest niedostępne (zablokowane)");
                     }
                     
-                    // Sprawdź czy miejsce nie jest już zarezerwowane
                     if (reservationSeatRepository.isSeatReservedForScreening(seat.getId(), screening.getId())) {
                         throw new SeatNotAvailableException("Miejsce rząd " + seat.getRowNumber() + ", miejsce " + seat.getSeatNumber() + " jest już zarezerwowane");
                     }
                     
-                    // Oblicz cenę
                     boolean isVip = seat.getSeatType() == pl.cinemaparadiso.enums.SeatType.VIP;
                     BigDecimal price = screening.calculateFinalPrice(isVip, seatSelection.getTicketType());
                     
@@ -118,7 +96,6 @@ public class ReservationService {
                 })
                 .collect(Collectors.toList());
         
-        // Utwórz rezerwację (domyślnie PENDING_PAYMENT - oczekuje na płatność)
         Reservation reservation = Reservation.builder()
                 .user(user)
                 .screening(screening)
@@ -127,10 +104,8 @@ public class ReservationService {
                 .reservationSeats(reservationSeats)
                 .build();
         
-        // Ustaw relację zwrotną (reservation -> reservationSeat)
         reservationSeats.forEach(rs -> rs.setReservation(reservation));
         
-        // Zapisz rezerwację (cascade zapisze też ReservationSeat)
         Reservation savedReservation = reservationRepository.save(reservation);
         
         log.info("Utworzono rezerwację ID: {} dla użytkownika ID: {}", savedReservation.getId(), userId);
@@ -138,9 +113,6 @@ public class ReservationService {
         return toDTO(savedReservation);
     }
     
-    /**
-     * Pobiera wszystkie rezerwacje użytkownika
-     */
     @Transactional(readOnly = true)
     public List<ReservationDTO> getUserReservations(Long userId) {
         log.debug("Pobieranie rezerwacji użytkownika ID: {}", userId);
@@ -151,9 +123,6 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
     
-    /**
-     * Pobiera rezerwację po ID (tylko dla właściciela)
-     */
     @Transactional(readOnly = true)
     public ReservationDTO getReservationById(Long reservationId, Long userId) {
         log.debug("Pobieranie rezerwacji ID: {} dla użytkownika ID: {}", reservationId, userId);
@@ -161,7 +130,6 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ReservationNotFoundException("Rezerwacja o ID " + reservationId + " nie istnieje"));
         
-        // Sprawdź czy rezerwacja należy do użytkownika
         if (!reservation.getUser().getId().equals(userId)) {
             throw new IllegalArgumentException("Nie masz uprawnień do tej rezerwacji");
         }
@@ -169,13 +137,6 @@ public class ReservationService {
         return toDTO(reservation);
     }
     
-    /**
-     * Weryfikuje dostępność wszystkich miejsc w rezerwacji
-     * Sprawdza czy miejsca nadal istnieją, są dostępne i nie zostały zajęte przez inną rezerwację
-     * 
-     * @param reservation - rezerwacja do weryfikacji
-     * @throws SeatNotAvailableException jeśli któreś miejsce jest niedostępne
-     */
     public void verifySeatsAvailability(Reservation reservation) {
         log.debug("Weryfikacja dostępności miejsc dla rezerwacji ID: {}", reservation.getId());
         
@@ -184,20 +145,16 @@ public class ReservationService {
         for (ReservationSeat reservationSeat : reservation.getReservationSeats()) {
             Long seatId = reservationSeat.getSeat().getId();
             
-            // Sprawdź czy miejsce nadal istnieje
             Seat seat = seatRepository.findById(seatId)
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Miejsce o ID " + seatId + " nie istnieje (może zostało usunięte)"));
             
-            // Sprawdź czy miejsce jest włączone (nie uszkodzone)
             if (!seat.getIsAvailable()) {
                 throw new SeatNotAvailableException(
                         "Miejsce rząd " + seat.getRowNumber() + ", miejsce " + seat.getSeatNumber() + 
                         " jest niedostępne (zablokowane)");
             }
             
-            // Sprawdź czy miejsce nie jest już zarezerwowane przez INNĄ rezerwację
-            // (pomijamy obecną rezerwację - może być w statusie PENDING_PAYMENT)
             boolean isReservedByOther = reservationSeatRepository.isSeatReservedByOtherReservation(
                     seatId, screeningId, reservation.getId());
             
@@ -211,26 +168,20 @@ public class ReservationService {
         log.debug("Weryfikacja dostępności miejsc zakończona pomyślnie dla rezerwacji ID: {}", reservation.getId());
     }
     
-    /**
-     * Anuluje rezerwację (tylko własną)
-     */
     public void cancelReservation(Long reservationId, Long userId) {
         log.info("Anulowanie rezerwacji ID: {} przez użytkownika ID: {}", reservationId, userId);
         
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ReservationNotFoundException("Rezerwacja o ID " + reservationId + " nie istnieje"));
         
-        // Sprawdź czy rezerwacja należy do użytkownika
         if (!reservation.getUser().getId().equals(userId)) {
             throw new IllegalArgumentException("Nie masz uprawnień do anulowania tej rezerwacji");
         }
         
-        // Sprawdź czy rezerwacja nie jest już anulowana
         if (reservation.getStatus() == ReservationStatus.CANCELLED) {
             throw new IllegalArgumentException("Rezerwacja jest już anulowana");
         }
         
-        // Sprawdź czy seans nie rozpoczął się już
         if (reservation.getScreening().getStartTime().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("Nie można anulować rezerwacji na seans, który już się rozpoczął");
         }
@@ -241,9 +192,6 @@ public class ReservationService {
         log.info("Anulowano rezerwację ID: {}", reservationId);
     }
     
-    /**
-     * Konwertuje encję Reservation na DTO
-     */
     private ReservationDTO toDTO(Reservation reservation) {
         List<ReservationSeatDTO> seatDTOs = reservation.getReservationSeats().stream()
                 .map(rs -> ReservationSeatDTO.builder()

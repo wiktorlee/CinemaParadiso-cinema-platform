@@ -1,4 +1,3 @@
--- Tabela ocen filmów
 CREATE TABLE movie_ratings (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
@@ -11,7 +10,6 @@ CREATE TABLE movie_ratings (
     CONSTRAINT uk_movie_ratings_user_movie UNIQUE (user_id, movie_id)
 );
 
--- Indeksy dla szybszego wyszukiwania
 CREATE INDEX idx_movie_ratings_movie_id ON movie_ratings(movie_id);
 CREATE INDEX idx_movie_ratings_user_id ON movie_ratings(user_id);
 CREATE INDEX idx_movie_ratings_rating ON movie_ratings(rating);

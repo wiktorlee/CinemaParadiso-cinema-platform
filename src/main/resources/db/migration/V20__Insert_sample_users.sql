@@ -1,19 +1,5 @@
--- V20__Insert_sample_users.sql
--- Dodanie przykładowych użytkowników do systemu
--- Wszyscy użytkownicy mają hasło: "password123"
--- 
--- UWAGA: BCrypt hash poniżej powinien działać dla hasła "password123"
--- Jeśli logowanie nie działa, wygeneruj nowy hash w aplikacji Spring Boot:
---   PasswordEncoder encoder = new BCryptPasswordEncoder();
---   String hash = encoder.encode("password123");
---   System.out.println(hash);
---
--- BCrypt hash dla "password123": $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
-
--- Sprawdź czy użytkownicy już istnieją (zapobiega duplikatom)
 DO $$
 BEGIN
-    -- Dodaj przykładowych użytkowników tylko jeśli nie istnieją
     IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'anna.kowalska') THEN
         INSERT INTO users (username, password, first_name, last_name, role)
         VALUES ('anna.kowalska', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Anna', 'Kowalska', 'USER');

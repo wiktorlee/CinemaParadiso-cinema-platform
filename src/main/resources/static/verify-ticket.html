@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weryfikacja Biletu - Cinema Paradiso</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .verification-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .verification-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        .verification-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .verification-icon.valid {
+            color: #28a745;
+        }
+        .verification-icon.invalid {
+            color: #dc3545;
+        }
+        .verification-message {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .verification-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .verification-details p {
+            margin-bottom: 10px;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .verification-card {
+                padding: 30px 20px;
+            }
+            .verification-icon {
+                font-size: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <div class="verification-card">
+            <div id="loadingState">
+                <div class="loading-spinner"></div>
+                <p class="mt-3">Weryfikowanie biletu...</p>
+            </div>
+            
+            <div id="resultState" style="display: none;">
+                <div id="verificationIcon" class="verification-icon"></div>
+                <h2 id="verificationTitle" class="verification-message"></h2>
+                <p id="verificationMessage" class="text-muted"></p>
+                <div id="verificationDetails" class="verification-details" style="display: none;"></div>
+                <button onclick="window.location.href='/index.html'" class="btn btn-primary mt-3">
+                    <i class="bi bi-house"></i> Strona główna
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function verifyTicket() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            
+            if (!token) {
+                showResult(false, 'Brak tokenu weryfikacyjnego', 'URL nie zawiera wymaganego tokenu.');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/tickets/verify?token=${encodeURIComponent(token)}`);
+                const data = await response.json();
+                
+                if (data.valid) {
+                    showResult(true, 'Bilet ważny', 'Bilet został zweryfikowany pomyślnie.', data);
+                } else {
+                    showResult(false, 'Bilet nieważny', data.message || 'Bilet nie może zostać zweryfikowany.');
+                }
+            } catch (error) {
+                console.error('Błąd weryfikacji:', error);
+                showResult(false, 'Błąd weryfikacji', 'Wystąpił błąd podczas weryfikacji biletu. Spróbuj ponownie później.');
+            }
+        }
+        
+        function showResult(valid, title, message, details = null) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('resultState').style.display = 'block';
+            
+            const icon = document.getElementById('verificationIcon');
+            const titleEl = document.getElementById('verificationTitle');
+            const messageEl = document.getElementById('verificationMessage');
+            const detailsEl = document.getElementById('verificationDetails');
+            
+            if (valid) {
+                icon.className = 'verification-icon valid';
+                icon.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+                titleEl.textContent = title;
+                titleEl.style.color = '#28a745';
+            } else {
+                icon.className = 'verification-icon invalid';
+                icon.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
+                titleEl.textContent = title;
+                titleEl.style.color = '#dc3545';
+            }
+            
+            messageEl.textContent = message;
+            
+            if (details && details.reservationId) {
+                detailsEl.style.display = 'block';
+                detailsEl.innerHTML = `
+                    <p><strong>ID Rezerwacji:</strong> #${details.reservationId}</p>
+                    <p class="text-muted mb-0"><small>Bilet został pomyślnie zweryfikowany</small></p>
+                `;
+            } else {
+                detailsEl.style.display = 'none';
+            }
+        }
+        
+        verifyTicket();
+    </script>
+</body>
+</html>
+

@@ -10,22 +10,12 @@ import pl.cinemaparadiso.entity.User;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-/**
- * Listener, który automatycznie ustawia informacje o użytkowniku
- * przy każdej zmianie w audytowanych encjach
- * 
- * Implementuje RevisionListener - interfejs Hibernate Envers
- */
 public class AuditRevisionListener implements RevisionListener {
 
     @Override
     public void newRevision(Object revisionEntity) {
         CustomRevisionEntity revision = (CustomRevisionEntity) revisionEntity;
         
-        // Timestamp jest automatycznie ustawiany przez Envers jako Long (milisekundy)
-        // Nie musimy go ustawiać ręcznie
-        
-        // Pobierz informacje o zalogowanym użytkowniku
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
         if (authentication != null && authentication.isAuthenticated() 
@@ -34,12 +24,10 @@ public class AuditRevisionListener implements RevisionListener {
             revision.setUserId(user.getId());
             revision.setUserUsername(user.getUsername());
         } else {
-            // Jeśli nie ma zalogowanego użytkownika (np. system, migracje)
             revision.setUserId(null);
             revision.setUserUsername("SYSTEM");
         }
         
-        // Pobierz IP adres z requestu
         try {
             ServletRequestAttributes attributes = 
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -50,14 +38,10 @@ public class AuditRevisionListener implements RevisionListener {
                 revision.setIpAddress(ipAddress);
             }
         } catch (Exception e) {
-            // Jeśli nie ma requestu (np. migracje, testy), ustaw null
             revision.setIpAddress(null);
         }
     }
 
-    /**
-     * Pobiera rzeczywisty IP adres klienta (uwzględnia proxy, load balancer)
-     */
     private String getClientIpAddress(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
@@ -76,7 +60,6 @@ public class AuditRevisionListener implements RevisionListener {
             ip = request.getRemoteAddr();
         }
         
-        // Jeśli IP zawiera wiele adresów (przez proxy), weź pierwszy
         if (ip != null && ip.contains(",")) {
             ip = ip.split(",")[0].trim();
         }

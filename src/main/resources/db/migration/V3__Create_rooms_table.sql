@@ -1,4 +1,3 @@
--- Tabela sal kinowych
 CREATE TABLE rooms (
     id BIGSERIAL PRIMARY KEY,
     room_number VARCHAR(50) NOT NULL UNIQUE,
@@ -6,7 +5,6 @@ CREATE TABLE rooms (
     seats_per_row INTEGER NOT NULL
 );
 
--- Indeks na numerze sali
 CREATE INDEX idx_rooms_room_number ON rooms(room_number);
 
 

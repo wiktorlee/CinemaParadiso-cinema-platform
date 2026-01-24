@@ -1,17 +1,15 @@
-/* Reset i podstawowe style */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Nowa paleta kolorów z ColorHunt */
 :root {
-    --primary: #2d3c59;      /* Ciemny niebieski - główny */
-    --secondary: #94a378;     /* Zielony/sage - akcent */
-    --accent: #e5ba41;        /* Żółty/gold - akcent */
-    --accent2: #d1855c;       /* Pomarańczowy/peach - akcent */
-    --dark: #1a2332;          /* Ciemniejszy odcień primary */
+    --primary: #2d3c59;
+    --secondary: #94a378;
+    --accent: #e5ba41;
+    --accent2: #d1855c;
+    --dark: #1a2332;
     --light: #f8f9fa;
     --danger: #dc3545;
     --success: #28a745;
@@ -30,7 +28,6 @@ body {
     padding: 20px;
 }
 
-/* Header - Bootstrap style */
 header {
     background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
     padding: 1rem;
@@ -137,7 +134,6 @@ header .container {
     flex-wrap: wrap;
 }
 
-/* Dropdown menu dla panelu admina */
 .admin-dropdown {
     position: relative;
 }
@@ -189,7 +185,6 @@ header .container {
     font-weight: 600;
 }
 
-/* Dashboard Layout dla stron admina */
 .dashboard-container {
     display: flex;
     min-height: calc(100vh - 80px);
@@ -328,7 +323,6 @@ header .container {
     margin: 0.5rem 0 0;
 }
 
-/* Responsywność */
 @media (max-width: 768px) {
     .dashboard-sidebar {
         position: fixed;
@@ -371,7 +365,6 @@ header .container {
     }
 }
 
-/* Carousel Styles */
 #mainCarousel {
     margin-bottom: 0;
 }
@@ -446,7 +439,6 @@ header .container {
     transform: scale(1.1);
 }
 
-/* Responsywność carousel */
 @media (max-width: 768px) {
     .carousel-caption h1 {
         font-size: 2rem;
@@ -468,7 +460,6 @@ header .container {
     }
 }
 
-/* Złote przyciski dla repertuaru */
 .btn-golden {
     background: var(--accent);
     border-color: var(--accent);
@@ -549,7 +540,6 @@ header .container {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Footer */
 footer {
     background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
     color: rgba(255, 255, 255, 0.8);
@@ -648,7 +638,6 @@ footer {
     }
 }
 
-/* Main content */
 main {
     background: rgba(255, 255, 255, 0.95);
     padding: 30px;
@@ -672,7 +661,6 @@ main {
     margin-bottom: 20px;
 }
 
-/* Auth container - stary styl (dla kompatybilności) */
 .auth-container {
     max-width: 400px;
     margin: 0 auto;
@@ -684,7 +672,6 @@ main {
     text-align: center;
 }
 
-/* Form signin - Bootstrap style */
 .form-signin {
     max-width: 400px;
     padding: 2rem;
@@ -785,7 +772,6 @@ main {
     min-height: 100vh;
 }
 
-/* Form styles */
 .form-group {
     margin-bottom: 20px;
 }
@@ -818,7 +804,6 @@ main {
     font-size: 12px;
 }
 
-/* Buttons */
 .btn {
     width: 100%;
     padding: 12px;
@@ -846,7 +831,6 @@ main {
     cursor: not-allowed;
 }
 
-/* Messages */
 .message {
     margin-top: 20px;
     padding: 12px;
@@ -868,7 +852,6 @@ main {
     display: block;
 }
 
-/* Auth link */
 .auth-link {
     text-align: center;
     margin-top: 20px;
@@ -884,7 +867,6 @@ main {
     text-decoration: underline;
 }
 
-/* User info */
 #userInfo {
     background-color: #f8f9fa;
     padding: 20px;
@@ -901,7 +883,6 @@ main {
     color: #666;
 }
 
-/* Profile container */
 .profile-container {
     max-width: 800px;
     margin: 0 auto;
@@ -963,7 +944,6 @@ main {
     text-align: center;
 }
 
-/* Movies grid */
 .movies-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -992,10 +972,9 @@ main {
     height: 300px;
     object-fit: cover;
     display: block;
-    /* Optymalizacja ładowania obrazów */
     will-change: opacity;
     backface-visibility: hidden;
-    transform: translateZ(0); /* Wymusza akcelerację sprzętową */
+    transform: translateZ(0);
 }
 
 .movie-poster-placeholder {
@@ -1026,7 +1005,6 @@ main {
     font-weight: 600;
 }
 
-/* Search container */
 .search-container {
     background: linear-gradient(135deg, rgba(229, 186, 65, 0.1) 0%, rgba(229, 186, 65, 0.05) 100%);
     border: 1px solid rgba(229, 186, 65, 0.2);
@@ -1102,7 +1080,6 @@ main {
     border-radius: 5px;
 }
 
-/* Pagination */
 .pagination-container {
     display: flex;
     justify-content: center;
@@ -1145,7 +1122,6 @@ main {
     font-weight: 500;
 }
 
-/* Admin movies */
 .admin-form-container {
     background: linear-gradient(135deg, rgba(229, 186, 65, 0.1) 0%, rgba(229, 186, 65, 0.05) 100%);
     border: 1px solid rgba(229, 186, 65, 0.2);
@@ -1203,7 +1179,6 @@ main {
     border-color: #d4a535;
 }
 
-/* File upload */
 .file-upload-area {
     border: 2px dashed var(--primary);
     border-radius: 10px;
@@ -1276,7 +1251,6 @@ textarea:focus {
     border-color: var(--primary);
 }
 
-/* Admin movies list */
 .admin-movies-list {
     margin-top: 30px;
 }
@@ -1338,7 +1312,6 @@ textarea:focus {
     border-top: 1px solid #e9ecef;
 }
 
-/* Movie Modal */
 .movie-modal {
     display: flex;
     position: fixed;
@@ -1471,7 +1444,6 @@ textarea:focus {
     text-align: justify;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .container {
         padding: 10px;
@@ -1513,7 +1485,6 @@ textarea:focus {
     }
 }
 
-/* Quick Actions */
 .quick-actions {
     display: flex;
     gap: 10px;
@@ -1525,7 +1496,6 @@ textarea:focus {
     padding: 10px 20px;
 }
 
-/* Room Management Styles */
 .admin-room-card {
     background: white;
     border: 1px solid #e9ecef;
@@ -1561,7 +1531,6 @@ textarea:focus {
     flex-wrap: wrap;
 }
 
-/* Modal Styles */
 .modal {
     display: flex;
     position: fixed;
@@ -1622,7 +1591,6 @@ textarea:focus {
     background-color: #f0f0f0;
 }
 
-/* Seat Grid Visualization */
 .seat-grid-container {
     margin: 20px 0;
 }
@@ -1698,7 +1666,6 @@ textarea:focus {
     opacity: 0.6;
 }
 
-/* Style dla miejsc w rezerwacji */
 .seat.available {
     background-color: #4CAF50;
     color: white;
@@ -1784,7 +1751,6 @@ textarea:focus {
     border-color: #FFA500;
 }
 
-/* Style dla legendy miejsc w rezerwacji */
 .legend-seat.available {
     background-color: #4CAF50;
     border-color: #45a049;
@@ -1811,7 +1777,6 @@ textarea:focus {
     opacity: 0.6;
 }
 
-/* Responsive for room visualization */
 @media (max-width: 768px) {
     .admin-room-card {
         flex-direction: column;
@@ -1840,7 +1805,6 @@ textarea:focus {
     }
 }
 
-/* Screening Management Styles */
 .admin-screening-card {
     background: white;
     border: 1px solid #e9ecef;
@@ -1911,7 +1875,6 @@ textarea:focus {
     flex-wrap: wrap;
 }
 
-/* Filter bar for screenings */
 .filter-bar {
     display: flex;
     gap: 10px;
@@ -1940,7 +1903,6 @@ textarea:focus {
     font-size: 14px;
 }
 
-/* Responsive for screenings */
 @media (max-width: 768px) {
     .admin-screening-card,
     .admin-schedule-card {
@@ -1960,7 +1922,6 @@ textarea:focus {
     }
 }
 
-/* Repertuar */
 .repertoire-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -2164,7 +2125,6 @@ textarea:focus {
     }
 }
 
-/* Dashboard Statistics Cards */
 .border-left-primary {
     border-left: 0.25rem solid #4e73df !important;
 }
@@ -2288,7 +2248,6 @@ textarea:focus {
     color: #333;
 }
 
-/* Typy toast */
 .toast-success {
     border-left: 4px solid var(--success);
 }
@@ -2321,7 +2280,6 @@ textarea:focus {
     color: #17a2b8;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .toast-container {
         top: 10px;
@@ -2527,7 +2485,6 @@ textarea:focus {
     transition: all 0.2s;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .modal-dialog {
         width: 95%;
@@ -2694,7 +2651,6 @@ textarea:focus {
     font-size: 16px;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .loader-overlay .film-reel-spinner {
         font-size: 48px;
@@ -2800,14 +2756,62 @@ textarea:focus {
     border-top: 1px solid #e9ecef;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
+    .ticket-modal-dialog {
+        width: 95%;
+        margin: 10px auto;
+    }
+    
+    .ticket-modal-content {
+        max-height: 95vh;
+        border-radius: 10px;
+    }
+    
+    .ticket-modal-header {
+        padding: 15px;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .ticket-modal-header h5 {
+        font-size: 1.2em;
+    }
+    
+    .ticket-modal-body {
+        padding: 15px;
+    }
+    
+    .ticket-info h3 {
+        font-size: 1.3em;
+    }
+    
+    .ticket-info .row {
+        flex-direction: column;
+    }
+    
+    .ticket-info .col-md-6 {
+        margin-bottom: 10px;
+    }
+    
+    .qr-code-container {
+        padding: 15px 0;
+    }
+    
     .qr-code-wrapper {
         padding: 15px;
     }
     
     .qr-code-wrapper img {
-        max-width: 250px;
+        max-width: 200px;
+    }
+    
+    .ticket-modal-footer {
+        padding: 10px 15px;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .ticket-modal-footer .btn {
+        width: 100%;
     }
 }
 

@@ -1,4 +1,3 @@
--- Tabela harmonogramów seansów (do automatycznego generowania)
 CREATE TABLE screening_schedules (
     id BIGSERIAL PRIMARY KEY,
     movie_id BIGINT NOT NULL,
@@ -14,7 +13,6 @@ CREATE TABLE screening_schedules (
     CONSTRAINT chk_schedules_dates CHECK (end_date >= start_date)
 );
 
--- Indeksy dla szybszego wyszukiwania
 CREATE INDEX idx_schedules_movie_id ON screening_schedules(movie_id);
 CREATE INDEX idx_schedules_room_id ON screening_schedules(room_id);
 CREATE INDEX idx_schedules_dates ON screening_schedules(start_date, end_date);

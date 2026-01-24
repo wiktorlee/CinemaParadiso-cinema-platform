@@ -1,4 +1,3 @@
--- Tabela filmów
 CREATE TABLE movies (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -10,7 +9,6 @@ CREATE TABLE movies (
     year INTEGER
 );
 
--- Indeks na tytule dla szybszego wyszukiwania
 CREATE INDEX idx_movies_title ON movies(title);
 
 

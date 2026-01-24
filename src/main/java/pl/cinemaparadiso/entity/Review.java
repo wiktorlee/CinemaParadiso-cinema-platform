@@ -9,10 +9,6 @@ import org.hibernate.envers.Audited;
 
 import java.time.LocalDateTime;
 
-/**
- * Encja reprezentująca recenzję filmu przez użytkownika
- * Jeden użytkownik może napisać jedną recenzję na film (może ją później edytować)
- */
 @Entity
 @Table(name = "reviews")
 @Audited
@@ -35,7 +31,7 @@ public class Review {
     private Movie movie;
     
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String content; // Treść recenzji
+    private String content;
     
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

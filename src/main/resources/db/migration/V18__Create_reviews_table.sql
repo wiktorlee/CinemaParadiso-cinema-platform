@@ -1,4 +1,3 @@
--- Tabela recenzji filmów
 CREATE TABLE reviews (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
@@ -10,7 +9,6 @@ CREATE TABLE reviews (
     CONSTRAINT fk_reviews_movie FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
 );
 
--- Indeksy dla szybszego wyszukiwania
 CREATE INDEX idx_reviews_movie_id ON reviews(movie_id);
 CREATE INDEX idx_reviews_user_id ON reviews(user_id);
 CREATE INDEX idx_reviews_created_at ON reviews(created_at DESC);

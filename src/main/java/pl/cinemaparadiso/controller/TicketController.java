@@ -70,7 +70,7 @@ public class TicketController {
         }
         
         try {
-            byte[] qrCodeImage = qrCodeService.generateQRCodeWithToken(reservation.getQrCodeToken());
+            byte[] qrCodeImage = qrCodeService.generateQRCodeWithURL(reservation.getQrCodeToken());
             
             logTicketAccess(reservation, user, "QR_DOWNLOAD");
             

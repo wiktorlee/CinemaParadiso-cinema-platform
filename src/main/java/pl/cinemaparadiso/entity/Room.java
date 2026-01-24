@@ -10,12 +10,9 @@ import org.hibernate.envers.Audited;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Encja reprezentująca salę kinową
- */
 @Entity
 @Table(name = "rooms")
-@Audited  // Hibernate Envers - audit trail dla tej encji
+@Audited
 @Data
 @Builder
 @NoArgsConstructor
@@ -27,35 +24,25 @@ public class Room {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String roomNumber; // Numer sali (np. "Sala 1", "Sala VIP")
+    private String roomNumber;
 
     @Column(nullable = false)
-    private Integer totalRows; // Liczba rzędów w sali
+    private Integer totalRows;
 
     @Column(nullable = false)
-    private Integer seatsPerRow; // Liczba miejsc w każdym rzędzie
+    private Integer seatsPerRow;
 
     @Column(length = 1000)
-    private String description; // Opcjonalny opis sali (np. "Sala z systemem dźwięku Dolby Atmos")
+    private String description;
 
-    /**
-     * @OneToMany - jedna sala ma wiele miejsc
-     * cascade = CascadeType.ALL - operacje na sali wpływają na miejsca
-     */
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Seat> seats = new ArrayList<>();
 
-    /**
-     * @OneToMany - jedna sala może mieć wiele seansów
-     */
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Screening> screenings = new ArrayList<>();
 
-    /**
-     * @OneToMany - jedna sala może mieć wiele harmonogramów
-     */
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ScreeningSchedule> schedules = new ArrayList<>();

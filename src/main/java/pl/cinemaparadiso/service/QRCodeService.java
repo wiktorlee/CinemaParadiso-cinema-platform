@@ -8,6 +8,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -22,6 +23,9 @@ public class QRCodeService {
     private static final int QR_CODE_WIDTH = 300;
     private static final int QR_CODE_HEIGHT = 300;
     private static final String IMAGE_FORMAT = "PNG";
+
+    @Value("${qr.code.base-url:http://localhost:8080}")
+    private String baseUrl;
 
     public byte[] generateQRCodeImage(String data) throws WriterException, IOException {
         log.debug("Generowanie QR code dla danych: {}", data);
@@ -49,7 +53,8 @@ public class QRCodeService {
     }
 
     public byte[] generateQRCodeWithURL(String token) throws WriterException, IOException {
-        String url = "https://cinema-paradiso.com/verify-ticket?token=" + token;
+        String url = baseUrl + "/verify-ticket.html?token=" + token;
+        log.info("Generowanie QR code z URL: {}", url);
         return generateQRCodeImage(url);
     }
 
